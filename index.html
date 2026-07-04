@@ -7,52 +7,17 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root {
-            --bg-neutral: #fdfbf7;
-            --card-bg: rgba(255, 255, 255, 0.85);
-        }
-        body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-neutral);
-            transition: background 1.5s ease, color 1.5s ease;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .bg-step-0 { background: #fdfbf7; color: #1a202c; } /* 荒野 */
-        .bg-step-1 { background: #ecfdf5; color: #064e3b; } /* 草原 */
-        .bg-step-2 { background: #f1f5f9; color: #1e293b; } /* 石造りの砦 */
-        .bg-step-3 { background: #fffbeb; color: #451a03; } /* 黄金の帝国 */
-        .bg-step-4 { background: #0f172a; color: #f8fafc; } /* 未来の要塞 */
-
-        .glass-panel {
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            border-radius: 1.25rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        .bg-step-4 .glass-panel {
-            background: rgba(30, 41, 59, 0.8);
-            border-color: rgba(255, 255, 255, 0.1);
-        }
-
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 400px;
-            margin: 0 auto;
-            height: 280px;
-        }
-
-        .mine-btn {
-            transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
-            touch-action: manipulation;
-        }
+        :root { --bg-neutral: #fdfbf7; --card-bg: rgba(255, 255, 255, 0.85); }
+        body { font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; background-color: var(--bg-neutral); transition: background 1.5s ease, color 1.5s ease; -webkit-tap-highlight-color: transparent; }
+        .bg-step-0 { background: #fdfbf7; color: #1a202c; }
+        .bg-step-1 { background: #ecfdf5; color: #064e3b; }
+        .bg-step-2 { background: #f1f5f9; color: #1e293b; }
+        .bg-step-3 { background: #fffbeb; color: #451a03; }
+        .bg-step-4 { background: #0f172a; color: #f8fafc; }
+        .glass-panel { background: var(--card-bg); backdrop-filter: blur(12px); border: 1px solid rgba(0, 0, 0, 0.05); border-radius: 1.25rem; }
+        .bg-step-4 .glass-panel { background: rgba(30, 41, 59, 0.8); border-color: rgba(255, 255, 255, 0.1); }
+        .mine-btn { transition: all 0.1s; touch-action: manipulation; }
         .mine-btn:active { transform: scale(0.92); }
-
-        .resource-badge {
-            font-variant-numeric: tabular-nums;
-        }
-
         .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
@@ -60,7 +25,6 @@
 <body class="bg-step-0 min-h-screen pb-24">
 
     <div class="max-w-md mx-auto p-4 space-y-6">
-        <!-- Header: Application Status -->
         <header class="text-center pt-4">
             <h1 id="rank-title" class="text-xs font-bold tracking-widest uppercase opacity-70 mb-1">新米開拓者</h1>
             <h2 id="castle-name" class="text-3xl font-extrabold tracking-tight">荒野の拠点</h2>
@@ -68,34 +32,19 @@
                 <span id="level-badge" class="px-3 py-1 bg-amber-500 text-white text-xs font-bold rounded-full">Lv.0</span>
                 <span id="auto-status" class="text-[10px] uppercase font-bold opacity-60">自動採掘: 停止中</span>
             </div>
+            <!-- 城の視覚表現 -->
+            <div id="castle-art" class="text-7xl my-6 transition-all duration-1000 transform scale-100 hover:scale-105">🏚️</div>
         </header>
 
-        <!-- New Section: Visual Display -->
-        <section id="visual-display" class="glass-panel p-6 text-center">
-            <h3 class="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-2">現在の拠点</h3>
-            <div id="castle-art" class="text-7xl transition-all duration-1000 transform scale-100 hover:scale-105 my-2">🏚️</div>
-            <p id="castle-desc" class="text-sm font-bold opacity-80">荒れ果てた荒野の拠点</p>
+        <section class="glass-panel p-5">
+            <div class="h-48"><canvas id="statChart"></canvas></div>
         </section>
 
-        <!-- Section 1: Dashboard Context -->
-        <section class="glass-panel p-5 space-y-4">
-            <p class="text-xs font-medium leading-relaxed opacity-80">
-                あなたの城の全体的な能力を可視化。施設を増やしてグラフを広げましょう。
-            </p>
-            <div class="chart-container">
-                <canvas id="statChart"></canvas>
-            </div>
-        </section>
-
-        <!-- Section 2: Resource Management -->
         <section class="space-y-3">
-            <div class="flex justify-between items-center px-1">
-                <h3 class="text-sm font-bold uppercase tracking-wider">採掘場</h3>
-            </div>
+            <h3 class="text-sm font-bold uppercase tracking-wider px-1">採掘場</h3>
             <div id="resource-grid" class="grid grid-cols-3 gap-3"></div>
         </section>
 
-        <!-- Section 3: Construction & Defense -->
         <section class="glass-panel p-5">
             <div class="flex border-b border-gray-200 mb-4 overflow-x-auto custom-scroll">
                 <button onclick="switchTab('build')" id="tab-build" class="pb-2 px-4 text-sm font-bold border-b-2 border-amber-500">建設・防衛</button>
@@ -104,211 +53,114 @@
             <div id="action-list" class="space-y-3 max-h-80 overflow-y-auto pr-2 custom-scroll"></div>
         </section>
 
-        <!-- Section 4: Achievements -->
         <section class="glass-panel p-5">
             <h3 class="text-xs font-bold uppercase mb-3 tracking-widest">進化のロードマップ</h3>
             <div id="achievement-log" class="space-y-2"></div>
         </section>
     </div>
 
-    <!-- Navigation -->
     <nav class="fixed bottom-0 left-0 right-0 glass-panel m-4 p-4 flex justify-around items-center border-t border-white/20 z-50">
-        <div class="text-center">
-            <p class="text-[10px] uppercase opacity-60">総資源</p>
-            <p id="total-res" class="text-lg font-bold">0</p>
-        </div>
+        <div class="text-center"><p class="text-[10px] uppercase opacity-60">総資源</p><p id="total-res" class="text-lg font-bold">0</p></div>
         <div class="h-8 w-[1px] bg-gray-300"></div>
-        <div class="text-center">
-            <p class="text-[10px] uppercase opacity-60">防衛</p>
-            <p id="def-score" class="text-lg font-bold">0</p>
-        </div>
+        <div class="text-center"><p class="text-[10px] uppercase opacity-60">防衛</p><p id="def-score" class="text-lg font-bold">0</p></div>
     </nav>
 
     <script>
         const state = {
             res: { 水: 0, 草: 0, 木材: 0, 石材: 0, 銅鉱石: 0, 鉄鉱石: 0, 銀鉱石: 0, 金鉱石: 0, チタン鉱石: 0 },
-            owned: {},
-            stats: { defense: 0, production: 0, culture: 0 },
-            autoMiningPower: 0,
-            level: 0,
-            currentTab: 'build'
+            owned: {}, stats: { defense: 0, production: 0, culture: 0 },
+            autoMiningPower: 0, level: 0, currentTab: 'build'
         };
 
-        const visuals = [
-            { icon: "🏚️", desc: "荒れ果てた荒野の拠点" },
-            { icon: "🏰", desc: "緑に囲まれた草原の拠点" },
-            { icon: "🏯", desc: "堅固な石造りの砦" },
-            { icon: "✨", desc: "黄金輝く帝国の城" },
-            { icon: "🛸", desc: "未知の技術が眠る未来の要塞" }
-        ];
-
-        const resConfig = {
-            '水': { color: 'bg-blue-100 text-blue-700 border-blue-200' },
-            '草': { color: 'bg-green-100 text-green-700 border-green-200' },
-            '木材': { color: 'bg-amber-100 text-amber-900 border-amber-200' },
-            '石材': { color: 'bg-gray-100 text-gray-700 border-gray-200' },
-            '銅鉱石': { color: 'bg-orange-100 text-orange-800 border-orange-200' },
-            '鉄鉱石': { color: 'bg-slate-200 text-slate-800 border-slate-300' },
-            '銀鉱石': { color: 'bg-zinc-100 text-zinc-600 border-zinc-200' },
-            '金鉱石': { color: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
-            'チタン鉱石': { color: 'bg-indigo-100 text-indigo-900 border-indigo-200' }
-        };
-
+        const visuals = ["🏚️", "🏰", "🏯", "✨", "🛸"];
         const craftLibrary = {
             build: [
                 { id: 'moat', name: '水堀', cost: { '水': 15 }, d: 10, p: 0, c: 5, info: '水の防壁' },
                 { id: 'grass_wall', name: '草の壁', cost: { '草': 20 }, d: 5, p: 0, c: 10, info: '自然の目隠し' },
-                { id: 'wood_wall', name: '木の壁', cost: { '木材': 30 }, d: 20, p: 0, c: 5, info: '丸太の壁' },
                 { id: 'stone_wall', name: '石の壁', cost: { '石材': 50 }, d: 50, p: 0, c: 5, info: '鉄壁の守り' },
-                { id: 'stone_tower', name: '石の監視棟', cost: { '石材': 80, '木材': 20 }, d: 80, p: 5, c: 10, info: '視界の確保' },
-                { id: 'copper_tower', name: '銅の監視棟', cost: { '銅鉱石': 60, '石材': 40 }, d: 120, p: 10, c: 20, info: '金属の補強' },
-                { id: 'iron_tower', name: '鉄の監視棟', cost: { '鉄鉱石': 100, '石材': 50 }, d: 300, p: 15, c: 20, info: '難攻不落' },
-                { id: 'silver_deco', name: '銀の装飾棟', cost: { '銀鉱石': 100, '石材': 50 }, d: 50, p: 20, c: 300, info: '銀の輝き' },
-                { id: 'gold_deco', name: '金の装飾棟', cost: { '金鉱石': 200, '鉄鉱石': 50 }, d: 100, p: 30, c: 800, info: '帝国の威信' },
-                { id: 'titan_tower', name: '未来の防衛棟', cost: { 'チタン鉱石': 500, '金鉱石': 100 }, d: 2500, p: 50, c: 1000, info: '未知の技術' }
+                { id: 'titan_tower', name: '未来の防衛棟', cost: { 'チタン鉱石': 500 }, d: 2500, p: 50, c: 1000, info: '超技術' }
             ],
             machine: [
-                { id: 'drill_1', name: '手動掘削機', cost: { '石材': 50, '木材': 50 }, power: 1, info: '自動採掘' },
-                { id: 'drill_2', name: '蒸気掘削機', cost: { '鉄鉱石': 100, '石材': 200 }, power: 5, info: '生産力強化' },
-                { id: 'drill_3', name: '未来の自動鉱山', cost: { 'チタン鉱石': 200, '鉄鉱石': 500 }, power: 30, info: '全自動化' }
+                { id: 'drill_1', name: '手動掘削機', cost: { '石材': 50 }, power: 1, info: '自動採掘' },
+                { id: 'drill_3', name: '未来の自動鉱山', cost: { 'チタン鉱石': 200 }, power: 30, info: '全自動化' }
             ]
         };
 
         let statChart;
-        function initChart() {
+        function init() {
             const ctx = document.getElementById('statChart').getContext('2d');
-            statChart = new Chart(ctx, {
-                type: 'radar',
-                data: {
-                    labels: ['防御力', '生産力', '文化度'],
-                    datasets: [{
-                        label: '能力値',
-                        data: [0, 0, 0],
-                        backgroundColor: 'rgba(245, 158, 11, 0.2)',
-                        borderColor: 'rgba(245, 158, 11, 0.8)',
-                        pointBackgroundColor: '#f59e0b',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    scales: { r: { beginAtZero: true, max: 100, ticks: { display: false } } },
-                    plugins: { legend: { display: false } },
-                    maintainAspectRatio: false
-                }
+            statChart = new Chart(ctx, { type: 'radar', data: { labels: ['防御力', '生産力', '文化度'], datasets: [{ data: [0,0,0], backgroundColor: 'rgba(245, 158, 11, 0.2)', borderColor: '#f59e0b', borderWidth: 2 }] }, options: { scales: { r: { beginAtZero: true } }, plugins: { legend: { display: false } } } });
+            
+            const grid = document.getElementById('resource-grid');
+            Object.keys(state.res).forEach(name => {
+                const btn = document.createElement('button');
+                btn.onclick = () => { state.res[name]++; updateUI(); };
+                btn.className = "mine-btn bg-white/50 p-3 rounded-xl border-b-4 border-slate-200 shadow-sm";
+                btn.innerHTML = `<p class="text-[10px] font-bold">${name}</p><p id="res-${name}" class="text-lg font-black">0</p>`;
+                grid.appendChild(btn);
             });
+            updateUI();
         }
 
         function updateUI() {
             document.getElementById('total-res').innerText = Object.values(state.res).reduce((a, b) => a + b, 0).toLocaleString();
             document.getElementById('def-score').innerText = state.stats.defense.toLocaleString();
-            Object.keys(state.res).forEach(key => {
-                const badge = document.getElementById(`res-${key}`);
-                if (badge) badge.innerText = state.res[key];
-            });
-
-            const chartData = [state.stats.defense, state.stats.production, state.stats.culture];
-            statChart.data.datasets[0].data = chartData;
-            statChart.options.scales.r.max = Math.max(...chartData, 100);
+            Object.keys(state.res).forEach(k => { const el = document.getElementById(`res-${k}`); if(el) el.innerText = state.res[k]; });
+            
+            statChart.data.datasets[0].data = [state.stats.defense, state.stats.production, state.stats.culture];
             statChart.update();
-
             renderCraftItems();
             checkProgression();
         }
 
         function craft(id, tab) {
             const item = craftLibrary[tab].find(x => x.id === id);
-            for (let [res, amt] of Object.entries(item.cost)) if (state.res[res] < amt) return;
-            for (let [res, amt] of Object.entries(item.cost)) state.res[res] -= amt;
-            
+            for(let [r, a] of Object.entries(item.cost)) if(state.res[r] < a) return;
+            for(let [r, a] of Object.entries(item.cost)) state.res[r] -= a;
             state.owned[id] = (state.owned[id] || 0) + 1;
-            if (tab === 'build') {
-                state.stats.defense += item.d; state.stats.production += item.p; state.stats.culture += item.c;
-            } else {
-                state.autoMiningPower += item.power;
-                document.getElementById('auto-status').innerText = `自動採掘: ${state.autoMiningPower}/秒`;
-            }
+            if(tab === 'build') { state.stats.defense += item.d; state.stats.production += item.p; state.stats.culture += item.c; }
+            else { state.autoMiningPower += item.power; document.getElementById('auto-status').innerText = `自動採掘: ${state.autoMiningPower}/秒`; }
             updateUI();
         }
 
         function checkProgression() {
-            const oldLevel = state.level;
             const score = state.stats.defense + state.stats.culture;
-
-            if (score > 5000) state.level = 4;
-            else if (score > 1500) state.level = 3;
-            else if (score > 300) state.level = 2;
-            else if (score > 50) state.level = 1;
-            else state.level = 0;
-
-            if (oldLevel !== state.level) {
-                document.body.className = `bg-step-${state.level} min-h-screen pb-24`;
-                document.getElementById('level-badge').innerText = `Lv.${state.level}`;
-                
-                // Update Castle Visuals
-                document.getElementById('castle-art').innerText = visuals[state.level].icon;
-                document.getElementById('castle-desc').innerText = visuals[state.level].desc;
-                
-                const titles = ["新米開拓者", "自然の守護者", "石壁の騎士", "黄金の皇帝", "超文明の主"];
-                const castleNames = ["荒野の拠点", "緑豊かな隠れ里", "不落の石造城", "黄金の都", "光り輝く聖域"];
-                document.getElementById('rank-title').innerText = titles[state.level];
-                document.getElementById('castle-name').innerText = castleNames[state.level];
+            const newLevel = score > 5000 ? 4 : score > 1500 ? 3 : score > 300 ? 2 : score > 50 ? 1 : 0;
+            if(state.level !== newLevel) {
+                state.level = newLevel;
+                document.body.className = `bg-step-${newLevel} min-h-screen pb-24`;
+                document.getElementById('castle-art').innerText = visuals[newLevel];
                 updateAchievementLog();
             }
         }
 
         function updateAchievementLog() {
             const logs = [
-                { text: "草原への進化", check: () => (state.owned.moat >= 3 && state.owned.grass_wall >= 3) },
-                { text: "石の要塞へ", check: () => (state.stats.defense >= 300) },
-                { text: "黄金の繁栄", check: () => (state.stats.culture >= 1500) },
-                { text: "超文明の主", check: () => (state.owned.titan_tower >= 1) }
+                { text: "草原へ", check: () => state.owned.moat >= 3 },
+                { text: "石の要塞", check: () => state.stats.defense >= 300 },
+                { text: "黄金の繁栄", check: () => state.stats.culture >= 1500 }
             ];
-            const container = document.getElementById('achievement-log');
-            container.innerHTML = logs.map(log => `
-                <div class="flex items-start space-x-3 text-xs ${log.check() ? 'opacity-40' : ''}">
-                    <span class="${log.check() ? 'text-green-500' : 'text-amber-500'} text-lg">${log.check() ? '●' : '○'}</span>
-                    <p class="font-bold">${log.text} ${log.check() ? '(完了)' : ''}</p>
-                </div>
-            `).join('');
+            document.getElementById('achievement-log').innerHTML = logs.map(l => 
+                `<div class="text-xs font-bold ${l.check()?'text-green-600':'text-gray-400'}">${l.check()?'●':'○'} ${l.text}</div>`).join('');
         }
 
         function renderCraftItems() {
             const list = document.getElementById('action-list');
-            list.innerHTML = craftLibrary[state.currentTab].map(item => {
-                let canAfford = true;
-                const costStrings = Object.entries(item.cost).map(([r, a]) => {
-                    if (state.res[r] < a) canAfford = false;
-                    return `<span class="${state.res[r] >= a ? 'text-green-600' : 'text-red-500'}">${r}${a}</span>`;
-                });
-                return `
-                    <button onclick="craft('${item.id}', '${state.currentTab}')" 
-                        class="w-full text-left p-3 rounded-lg border transition-all ${canAfford ? 'border-amber-200 bg-amber-50' : 'bg-gray-100 opacity-60 border-transparent cursor-not-allowed'}">
-                        <div class="flex justify-between text-sm font-bold">${item.name} <span class="text-[10px] opacity-50">所持: ${state.owned[item.id] || 0}</span></div>
-                        <div class="flex space-x-2 text-[10px] font-mono mt-1">${costStrings.join(' ')}</div>
-                    </button>
-                `;
-            }).join('');
+            list.innerHTML = craftLibrary[state.currentTab].map(item => `
+                <button onclick="craft('${item.id}', '${state.currentTab}')" class="w-full text-left p-3 rounded-lg border bg-white/50 border-white/20">
+                    <div class="flex justify-between font-bold text-sm"><span>${item.name}</span><span class="opacity-50">所持:${state.owned[item.id]||0}</span></div>
+                    <div class="text-[10px] font-mono">${Object.entries(item.cost).map(([r,a])=>`${r}:${a}`).join(' ')}</div>
+                </button>
+            `).join('');
         }
 
-        function switchTab(tab) {
-            state.currentTab = tab;
-            document.getElementById('tab-build').className = `pb-2 px-4 text-sm font-bold border-b-2 ${tab==='build' ? 'border-amber-500 opacity-100' : 'border-transparent opacity-50'}`;
-            document.getElementById('tab-machine').className = `pb-2 px-4 text-sm font-bold border-b-2 ${tab==='machine' ? 'border-amber-500 opacity-100' : 'border-transparent opacity-50'}`;
+        function switchTab(t) {
+            state.currentTab = t;
             renderCraftItems();
         }
 
-        const grid = document.getElementById('resource-grid');
-        Object.entries(resConfig).forEach(([name, cfg]) => {
-            const btn = document.createElement('button');
-            btn.onclick = () => mine(name);
-            btn.className = `mine-btn flex flex-col items-center justify-center p-3 rounded-2xl border-b-4 ${cfg.color} shadow-sm`;
-            btn.innerHTML = `<span class="text-xs font-bold mb-1">${name}</span><span id="res-${name}" class="resource-badge text-lg font-black">0</span>`;
-            grid.appendChild(btn);
-        });
-
-        initChart();
-        updateUI();
-        setInterval(() => { if (state.autoMiningPower > 0) { state.res['石材'] += state.autoMiningPower; updateUI(); } }, 1000);
+        init();
+        setInterval(() => { if(state.autoMiningPower > 0) { state.res['石材'] += state.autoMiningPower; updateUI(); } }, 1000);
     </script>
 </body>
 </html>
