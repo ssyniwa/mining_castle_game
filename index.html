@@ -2,165 +2,157 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mining Castle Evolution</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>城塞クラフト・放置採掘ゲーム</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --bg-neutral: #fdfbf7; --card-bg: rgba(255, 255, 255, 0.85); }
-        body { font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; background-color: var(--bg-neutral); transition: background 1.5s ease, color 1.5s ease; -webkit-tap-highlight-color: transparent; }
-        .bg-step-0 { background: #fdfbf7; color: #1a202c; }
-        .bg-step-1 { background: #ecfdf5; color: #064e3b; }
-        .bg-step-2 { background: #f1f5f9; color: #1e293b; }
-        .bg-step-3 { background: #fffbeb; color: #451a03; }
-        .bg-step-4 { background: #0f172a; color: #f8fafc; }
-        .glass-panel { background: var(--card-bg); backdrop-filter: blur(12px); border: 1px solid rgba(0, 0, 0, 0.05); border-radius: 1.25rem; }
-        .bg-step-4 .glass-panel { background: rgba(30, 41, 59, 0.8); border-color: rgba(255, 255, 255, 0.1); }
-        .mine-btn { transition: all 0.1s; touch-action: manipulation; }
-        .mine-btn:active { transform: scale(0.92); }
-        .custom-scroll::-webkit-scrollbar { width: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        body { background-color: #1a1a2e; color: white; font-family: sans-serif; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .card { background: #16213e; border-radius: 12px; padding: 15px; margin: 10px 0; }
+        .castle-bg { transition: all 0.5s; background-size: cover; background-position: center; }
+        .btn-action { background: #4e4e6a; padding: 10px; border-radius: 8px; width: 100%; margin-top: 5px; }
+        .btn-action:active { transform: scale(0.98); }
     </style>
 </head>
-<body class="bg-step-0 min-h-screen pb-24">
+<body class="p-4 max-w-md mx-auto">
 
-    <div class="max-w-md mx-auto p-4 space-y-6">
-        <header class="text-center pt-4">
-            <h1 id="rank-title" class="text-xs font-bold tracking-widest uppercase opacity-70 mb-1">新米開拓者</h1>
-            <h2 id="castle-name" class="text-3xl font-extrabold tracking-tight">荒野の拠点</h2>
-            <div class="flex justify-center items-center mt-2 space-x-2">
-                <span id="level-badge" class="px-3 py-1 bg-amber-500 text-white text-xs font-bold rounded-full">Lv.0</span>
-                <span id="auto-status" class="text-[10px] uppercase font-bold opacity-60">自動採掘: 停止中</span>
-            </div>
-            <!-- 城の視覚表現 -->
-            <div id="castle-art" class="text-7xl my-6 transition-all duration-1000 transform scale-100 hover:scale-105">🏚️</div>
-        </header>
-
-        <section class="glass-panel p-5">
-            <div class="h-48"><canvas id="statChart"></canvas></div>
-        </section>
-
-        <section class="space-y-3">
-            <h3 class="text-sm font-bold uppercase tracking-wider px-1">採掘場</h3>
-            <div id="resource-grid" class="grid grid-cols-3 gap-3"></div>
-        </section>
-
-        <section class="glass-panel p-5">
-            <div class="flex border-b border-gray-200 mb-4 overflow-x-auto custom-scroll">
-                <button onclick="switchTab('build')" id="tab-build" class="pb-2 px-4 text-sm font-bold border-b-2 border-amber-500">建設・防衛</button>
-                <button onclick="switchTab('machine')" id="tab-machine" class="pb-2 px-4 text-sm font-bold border-b-2 border-transparent opacity-50">技術・自動化</button>
-            </div>
-            <div id="action-list" class="space-y-3 max-h-80 overflow-y-auto pr-2 custom-scroll"></div>
-        </section>
-
-        <section class="glass-panel p-5">
-            <h3 class="text-xs font-bold uppercase mb-3 tracking-widest">進化のロードマップ</h3>
-            <div id="achievement-log" class="space-y-2"></div>
-        </section>
+    <div id="castle-area" class="castle-bg card text-center min-h-[150px] flex flex-col justify-center items-center">
+        <h1 id="castle-title" class="text-2xl font-bold">小作の小屋</h1>
+        <p id="castle-desc">城の完成を目指そう！</p>
     </div>
 
-    <nav class="fixed bottom-0 left-0 right-0 glass-panel m-4 p-4 flex justify-around items-center border-t border-white/20 z-50">
-        <div class="text-center"><p class="text-[10px] uppercase opacity-60">総資源</p><p id="total-res" class="text-lg font-bold">0</p></div>
-        <div class="h-8 w-[1px] bg-gray-300"></div>
-        <div class="text-center"><p class="text-[10px] uppercase opacity-60">防衛</p><p id="def-score" class="text-lg font-bold">0</p></div>
-    </nav>
+    <div class="mt-4 grid grid-cols-2 gap-2 text-sm" id="resource-display">
+        <!-- 資源表示エリア -->
+    </div>
+
+    <div class="flex gap-2 mt-6 overflow-x-auto pb-2">
+        <button onclick="showTab('mine')" class="px-4 py-2 bg-blue-700 rounded-lg">採掘</button>
+        <button onclick="showTab('build')" class="px-4 py-2 bg-green-700 rounded-lg">建築</button>
+        <button onclick="showTab('goals')" class="px-4 py-2 bg-yellow-700 rounded-lg">目標</button>
+    </div>
+
+    <div id="mine" class="tab-content active mt-4">
+        <h2 class="text-lg font-bold mb-2">採掘現場</h2>
+        <div id="mining-nodes" class="grid grid-cols-2 gap-2"></div>
+    </div>
+
+    <div id="build" class="tab-content mt-4">
+        <h2 class="text-lg font-bold mb-2">施設・部隊建築</h2>
+        <div id="build-list"></div>
+    </div>
+
+    <div id="goals" class="tab-content mt-4">
+        <h2 class="text-lg font-bold mb-2">目標リスト</h2>
+        <div id="goal-list"></div>
+    </div>
 
     <script>
         const state = {
-            res: { 水: 0, 草: 0, 木材: 0, 石材: 0, 銅鉱石: 0, 鉄鉱石: 0, 銀鉱石: 0, 金鉱石: 0, チタン鉱石: 0 },
-            owned: {}, stats: { defense: 0, production: 0, culture: 0 },
-            autoMiningPower: 0, level: 0, currentTab: 'build'
-        };
-
-        const visuals = ["🏚️", "🏰", "🏯", "✨", "🛸"];
-        const craftLibrary = {
-            build: [
-                { id: 'moat', name: '水堀', cost: { '水': 15 }, d: 10, p: 0, c: 5, info: '水の防壁' },
-                { id: 'grass_wall', name: '草の壁', cost: { '草': 20 }, d: 5, p: 0, c: 10, info: '自然の目隠し' },
-                { id: 'stone_wall', name: '石の壁', cost: { '石材': 50 }, d: 50, p: 0, c: 5, info: '鉄壁の守り' },
-                { id: 'titan_tower', name: '未来の防衛棟', cost: { 'チタン鉱石': 500 }, d: 2500, p: 50, c: 1000, info: '超技術' }
-            ],
-            machine: [
-                { id: 'drill_1', name: '手動掘削機', cost: { '石材': 50 }, power: 1, info: '自動採掘' },
-                { id: 'drill_3', name: '未来の自動鉱山', cost: { 'チタン鉱石': 200 }, power: 30, info: '全自動化' }
+            res: { water: 0, grass: 0, wood: 0, stone: 0, copper: 0, iron: 0, silver: 0, gold: 0, titanium: 0 },
+            excavators: { water: 0, grass: 0, wood: 0, stone: 0, copper: 0, iron: 0, silver: 0, gold: 0, titanium: 0 },
+            buildings: {},
+            goals: [
+                { id: 1, title: "基礎固め", desc: "草を10個集める", check: () => state.res.grass >= 10, done: false },
+                { id: 2, title: "砦の建設", desc: "木の壁を建てる", check: () => (state.buildings.woodWall || 0) >= 1, done: false },
+                { id: 3, title: "鉄壁の要塞", desc: "鉄の監視棟を建てる", check: () => (state.buildings.ironWatchtower || 0) >= 1, done: false },
+                { id: 4, title: "黄金の城", desc: "金の装飾棟を建てる", check: () => (state.buildings.goldOrnament || 0) >= 1, done: false },
+                { id: 5, title: "未来の要塞", desc: "未来の防衛棟を建てる", check: () => (state.buildings.futureDef || 0) >= 1, done: false }
             ]
         };
 
-        let statChart;
-        function init() {
-            const ctx = document.getElementById('statChart').getContext('2d');
-            statChart = new Chart(ctx, { type: 'radar', data: { labels: ['防御力', '生産力', '文化度'], datasets: [{ data: [0,0,0], backgroundColor: 'rgba(245, 158, 11, 0.2)', borderColor: '#f59e0b', borderWidth: 2 }] }, options: { scales: { r: { beginAtZero: true } }, plugins: { legend: { display: false } } } });
-            
-            const grid = document.getElementById('resource-grid');
-            Object.keys(state.res).forEach(name => {
-                const btn = document.createElement('button');
-                btn.onclick = () => { state.res[name]++; updateUI(); };
-                btn.className = "mine-btn bg-white/50 p-3 rounded-xl border-b-4 border-slate-200 shadow-sm";
-                btn.innerHTML = `<p class="text-[10px] font-bold">${name}</p><p id="res-${name}" class="text-lg font-black">0</p>`;
-                grid.appendChild(btn);
+        const recipes = {
+            waterMoat: { name: "水堀", cost: { water: 50 }, type: "facility" },
+            grassWall: { name: "草の壁", cost: { grass: 20 }, type: "facility" },
+            woodWall: { name: "木の壁", cost: { wood: 50 }, type: "facility" },
+            torch: { name: "松明", cost: { wood: 10 }, type: "facility" },
+            stoneWall: { name: "石の壁", cost: { stone: 50 }, type: "facility" },
+            stoneWatch: { name: "石の監視棟", cost: { stone: 100 }, type: "facility" },
+            copperWatch: { name: "銅の監視棟", cost: { copper: 50 }, type: "facility" },
+            copperArcher: { name: "銅の弓兵", cost: { copper: 80 }, type: "unit" },
+            ironWatch: { name: "鉄の監視棟", cost: { iron: 100 }, type: "facility" },
+            ironSpear: { name: "鉄の槍兵", cost: { iron: 80 }, type: "unit" },
+            ironArtillery: { name: "鉄の砲兵", cost: { iron: 200 }, type: "unit" },
+            silverOrnament: { name: "銀の装飾棟", cost: { silver: 500 }, type: "facility" },
+            goldOrnament: { name: "金の装飾棟", cost: { gold: 500 }, type: "facility" },
+            futureDef: { name: "未来の防衛棟", cost: { titanium: 1000 }, type: "facility" }
+        };
+
+        function render() {
+            // 資源更新
+            const resHtml = Object.keys(state.res).map(key => 
+                `<div class="card p-2"><div>${key.toUpperCase()}</div><div class="font-bold">${Math.floor(state.res[key])}</div></div>`
+            ).join('');
+            document.getElementById('resource-display').innerHTML = resHtml;
+
+            // 採掘ノード更新
+            const nodesHtml = Object.keys(state.res).map(key => 
+                `<button onclick="mine('${key}')" class="btn-action">掘る: ${key.toUpperCase()}<br><small>掘削機: ${state.excavators[key]}</small></button>`
+            ).join('');
+            document.getElementById('mining-nodes').innerHTML = nodesHtml;
+
+            // 建築リスト更新
+            const buildHtml = Object.keys(recipes).map(key => 
+                `<div class="card">
+                    <p class="font-bold">${recipes[key].name}</p>
+                    <button onclick="build('${key}')" class="btn-action bg-green-600">建築 (cost: ${JSON.stringify(recipes[key].cost)})</button>
+                </div>`
+            ).join('');
+            document.getElementById('build-list').innerHTML = buildHtml;
+
+            // 目標チェック
+            state.goals.forEach(g => {
+                if (!g.done && g.check()) {
+                    g.done = true;
+                    updateCastleVisual();
+                }
             });
-            updateUI();
+            const goalHtml = state.goals.map(g => 
+                `<div class="card ${g.done ? 'bg-green-900' : 'bg-red-900'}">${g.title}: ${g.desc} ${g.done ? '✓' : ''}</div>`
+            ).join('');
+            document.getElementById('goal-list').innerHTML = goalHtml;
         }
 
-        function updateUI() {
-            document.getElementById('total-res').innerText = Object.values(state.res).reduce((a, b) => a + b, 0).toLocaleString();
-            document.getElementById('def-score').innerText = state.stats.defense.toLocaleString();
-            Object.keys(state.res).forEach(k => { const el = document.getElementById(`res-${k}`); if(el) el.innerText = state.res[k]; });
-            
-            statChart.data.datasets[0].data = [state.stats.defense, state.stats.production, state.stats.culture];
-            statChart.update();
-            renderCraftItems();
-            checkProgression();
+        function mine(res) { state.res[res] += 1; render(); }
+
+        function build(itemKey) {
+            const cost = recipes[itemKey].cost;
+            for (let res in cost) {
+                if (state.res[res] < cost[res]) return;
+            }
+            for (let res in cost) {
+                state.res[res] -= cost[res];
+            }
+            state.buildings[itemKey] = (state.buildings[itemKey] || 0) + 1;
+            render();
         }
 
-        function craft(id, tab) {
-            const item = craftLibrary[tab].find(x => x.id === id);
-            for(let [r, a] of Object.entries(item.cost)) if(state.res[r] < a) return;
-            for(let [r, a] of Object.entries(item.cost)) state.res[r] -= a;
-            state.owned[id] = (state.owned[id] || 0) + 1;
-            if(tab === 'build') { state.stats.defense += item.d; state.stats.production += item.p; state.stats.culture += item.c; }
-            else { state.autoMiningPower += item.power; document.getElementById('auto-status').innerText = `自動採掘: ${state.autoMiningPower}/秒`; }
-            updateUI();
-        }
-
-        function checkProgression() {
-            const score = state.stats.defense + state.stats.culture;
-            const newLevel = score > 5000 ? 4 : score > 1500 ? 3 : score > 300 ? 2 : score > 50 ? 1 : 0;
-            if(state.level !== newLevel) {
-                state.level = newLevel;
-                document.body.className = `bg-step-${newLevel} min-h-screen pb-24`;
-                document.getElementById('castle-art').innerText = visuals[newLevel];
-                updateAchievementLog();
+        function updateCastleVisual() {
+            const completedCount = state.goals.filter(g => g.done).length;
+            const el = document.getElementById('castle-area');
+            const title = document.getElementById('castle-title');
+            if (completedCount >= 4) {
+                el.className = "castle-bg card text-center min-h-[150px] flex flex-col justify-center items-center bg-yellow-900";
+                title.innerText = "伝説の黄金城";
+            } else if (completedCount >= 2) {
+                el.className = "castle-bg card text-center min-h-[150px] flex flex-col justify-center items-center bg-slate-700";
+                title.innerText = "堅牢な石城";
             }
         }
 
-        function updateAchievementLog() {
-            const logs = [
-                { text: "草原へ", check: () => state.owned.moat >= 3 },
-                { text: "石の要塞", check: () => state.stats.defense >= 300 },
-                { text: "黄金の繁栄", check: () => state.stats.culture >= 1500 }
-            ];
-            document.getElementById('achievement-log').innerHTML = logs.map(l => 
-                `<div class="text-xs font-bold ${l.check()?'text-green-600':'text-gray-400'}">${l.check()?'●':'○'} ${l.text}</div>`).join('');
+        function showTab(id) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
         }
 
-        function renderCraftItems() {
-            const list = document.getElementById('action-list');
-            list.innerHTML = craftLibrary[state.currentTab].map(item => `
-                <button onclick="craft('${item.id}', '${state.currentTab}')" class="w-full text-left p-3 rounded-lg border bg-white/50 border-white/20">
-                    <div class="flex justify-between font-bold text-sm"><span>${item.name}</span><span class="opacity-50">所持:${state.owned[item.id]||0}</span></div>
-                    <div class="text-[10px] font-mono">${Object.entries(item.cost).map(([r,a])=>`${r}:${a}`).join(' ')}</div>
-                </button>
-            `).join('');
-        }
+        setInterval(() => {
+            Object.keys(state.excavators).forEach(res => {
+                state.res[res] += state.excavators[res] * 0.5;
+            });
+            render();
+        }, 1000);
 
-        function switchTab(t) {
-            state.currentTab = t;
-            renderCraftItems();
-        }
-
-        init();
-        setInterval(() => { if(state.autoMiningPower > 0) { state.res['石材'] += state.autoMiningPower; updateUI(); } }, 1000);
+        render();
     </script>
 </body>
 </html>
