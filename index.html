@@ -3,350 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta property="og:title" content="Mining Castle">
-    <meta property="og:description" content="採掘と建築の放置系Webゲーム">
-    <meta property="og:image" content="https://ssyniwa.githab.io/mining_castle_game/screenshot.png">
-    <title>Mining Castle: 究極の採掘と城の物語</title>
+    <title>Mining Castle Defense</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Noto+Sans+JP:wght@400;700&display=swap');
-        
-        body {
-            font-family: 'Inter', 'Noto Sans JP', sans-serif;
-            background-color: #f8fafc;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-            height: 250px;
-            max-height: 300px;
-        }
-
-        .mine-block {
-            transition: transform 0.1s active, background-color 0.2s;
-            cursor: pointer;
-        }
-
-        .mine-block:active {
-            transform: scale(0.95);
-        }
-
-        .glass-card {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-        }
-
-        .castle-part {
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        body { background: #1e293b; color: white; font-family: sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); }
     </style>
 </head>
-<body class="text-slate-800">
-
-    <div class="max-w-md mx-auto min-h-screen flex flex-col p-4 space-y-6">
-        
-        <!-- ヘッダーセクション -->
-        <header class="text-center py-6">
-            <h1 class="text-3xl font-bold tracking-tight text-slate-900">MINING <span class="text-amber-600">CASTLE</span></h1>
-            <p class="text-sm text-slate-500 mt-2">素材を掘り出し、伝説の城を築き上げよう</p>
+<body class="p-4">
+    <div class="max-w-xl mx-auto space-y-6">
+        <header class="text-center">
+            <h1 class="text-2xl font-bold text-amber-400">🛡️ マイニング・キャッスル防衛戦</h1>
+            <p id="castle-status" class="text-sm text-slate-400">現在の背景: 荒野</p>
         </header>
 
-        <!-- イントロダクション -->
-        <section class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
-            <p class="text-sm leading-relaxed text-slate-600">
-                このアプリケーションは、リソース管理とクリエイティブな建設を融合させたインタラクティブ体験です。
-                左側の採掘エリアで素材を集め、ワークショップで城のパーツへと加工します。
-                あなたの戦略と継続的な採掘が、荒野に壮大な城を出現させます。
-            </p>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="glass p-4 rounded-xl">
+                <p class="text-xs text-slate-400">材料</p>
+                <div id="resources" class="text-lg font-mono">石材: 0</div>
+            </div>
+            <div class="glass p-4 rounded-xl">
+                <p class="text-xs text-slate-400">戦力</p>
+                <div id="defenses" class="text-lg font-mono">部隊: 0</div>
+            </div>
+        </div>
+
+        <section class="glass p-4 rounded-xl">
+            <h2 class="text-sm font-bold mb-2">⛏️ 採掘 (クリックで入手)</h2>
+            <div id="mine-buttons" class="grid grid-cols-3 gap-2"></div>
         </section>
 
-        <!-- メインゲームエリア -->
-        <main class="flex-grow space-y-6">
-            
-            <!-- リソースダッシュボード -->
-            <div class="grid grid-cols-2 gap-4">
-                <div class="glass-card p-4 rounded-2xl shadow-sm text-center border-b-4 border-amber-500">
-                    <span class="text-xs font-semibold text-slate-400 uppercase">石材の在庫</span>
-                    <div id="stone-count" class="text-2xl font-bold text-slate-800">0</div>
-                </div>
-                <div class="glass-card p-4 rounded-2xl shadow-sm text-center border-b-4 border-indigo-500">
-                    <span class="text-xs font-semibold text-slate-400 uppercase">建設レベル</span>
-                    <div id="castle-level" class="text-2xl font-bold text-slate-800">0</div>
-                </div>
-            </div>
-
-            <!-- 採掘セクション -->
-            <section class="space-y-3">
-                <div class="flex justify-between items-end">
-                    <h2 class="text-lg font-bold px-1">採掘エリア</h2>
-                    <span class="text-xs text-slate-400">タップして採掘開始</span>
-                </div>
-                <div id="mine-grid" class="grid grid-cols-3 gap-3 bg-slate-200 p-3 rounded-2xl shadow-inner">
-                    <!-- JSでグリッドを生成 -->
-                </div>
-            </section>
-
-            <!-- 建設・ワークショップ -->
-            <section class="bg-white rounded-2xl p-5 shadow-md space-y-4">
-                <h2 class="text-lg font-bold">ワークショップ</h2>
-                <p class="text-xs text-slate-500 italic">一定の石材を消費して城の設備をアップグレードします。</p>
-                
-                <div class="space-y-3">
-                    <button id="btn-craft-wall" onclick="app.craft('wall')" class="w-full flex justify-between items-center bg-slate-800 text-white p-4 rounded-xl font-semibold disabled:opacity-30 disabled:cursor-not-allowed transition-all">
-                        <span>🧱 城壁を造る</span>
-                        <span class="text-xs bg-slate-700 px-2 py-1 rounded">石材 10個</span>
-                    </button>
-                    <button id="btn-craft-tower" onclick="app.craft('tower')" class="w-full flex justify-between items-center bg-slate-800 text-white p-4 rounded-xl font-semibold disabled:opacity-30 disabled:cursor-not-allowed transition-all">
-                        <span>🏰 塔を建てる</span>
-                        <span class="text-xs bg-slate-700 px-2 py-1 rounded">石材 50個</span>
-                    </button>
-                </div>
-            </section>
-
-            <!-- 城の可視化セクション -->
-            <section class="bg-indigo-900 rounded-3xl p-6 min-h-[200px] relative overflow-hidden shadow-xl">
-                <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 20px 20px;"></div>
-                <h2 class="text-white text-center text-sm font-bold mb-4 relative z-10">現在の建設状況</h2>
-                <div id="castle-display" class="flex justify-center items-end h-32 space-x-1 relative z-10">
-                    <!-- 城のグラフィックが動的に生成される -->
-                    <div class="text-indigo-300 text-xs italic mb-4">まだ何も建設されていません</div>
-                </div>
-            </section>
-
-            <!-- データ統計セクション -->
-            <section class="bg-white rounded-2xl p-5 shadow-sm space-y-4">
-                <h2 class="text-lg font-bold">採掘効率の分析</h2>
-                <p class="text-xs text-slate-500 mb-2">過去の採掘データに基づいた統計グラフです。</p>
-                <div class="chart-container">
-                    <canvas id="statsChart"></canvas>
-                </div>
-            </section>
-
-            <!-- 実績セクション -->
-            <section class="space-y-3 pb-10">
-                <h2 class="text-lg font-bold px-1">達成目標 (Achievements)</h2>
-                <div id="achievement-list" class="space-y-2">
-                    <!-- 実績がここに追加される -->
-                </div>
-            </section>
-
-        </main>
-        
-        <footer class="text-center py-6 text-slate-400 text-xs">
-            &copy; 2024 Mining Castle Interactive Workshop
-        </footer>
+        <section class="glass p-4 rounded-xl">
+            <h2 class="text-sm font-bold mb-2">🏗️ 建築・防衛編成</h2>
+            <div id="craft-buttons" class="grid grid-cols-1 gap-2"></div>
+        </section>
     </div>
-
-    <!-- 達成通知ポップアップ -->
-    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-amber-500 text-white px-6 py-3 rounded-full shadow-2xl font-bold opacity-0 transition-opacity pointer-events-none z-50">
-        実績を解除しました！
-    </div>
-
-    <!-- Chosen Palette: Ethereal Slate & Amber -->
-    <!-- Application Structure Plan: 
-         1. イントロダクション: ユーザーに目的（採掘→建設）を明示し、アプリの構造を理解させる。
-         2. ステータス表示: リソースを常にトップに配置し、現状を把握しやすくする。
-         3. 採掘（Input）: グリッド状のクリックエリアを設け、ゲーム性を確保。
-         4. 建設（Action）: 必要なコストを明示したボタンで、次の目標を意識させる。
-         5. 視覚化（Feedback）: CSSとHTML要素を組み合わせ、城が物理的に成長する様子を表現。
-         6. 分析（Analysis）: Chart.jsを用い、単純なクリック作業に「データ分析」の視点を加え、継続意欲を高める。
-    -->
-    <!-- Visualization & Content Choices: 
-         - 石材在庫/レベル: 数値表示 -> 進捗の即時フィードバック。
-         - 採掘グリッド: CanvasではなくHTML要素＋JSイベント -> スマホでのタップ精度とアクセシビリティを確保。
-         - 採掘効率グラフ: Chart.js (Line Chart) -> 自分の努力（クリック数）の推移を可視化。
-         - 城の建設状況: ダイナミックHTML生成 -> CSSのtransitionを利用し、追加された時の「ワクワク感」を演出。
-         - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
-    -->
 
     <script>
-        const app = {
-            data: {
-                stones: 0,
-                totalMined: 0,
-                castleLevel: 0,
-                history: [],
-                parts: [],
-                achievements: [
-                    { id: 'first_stone', title: '最初の一歩', desc: '石材を10個集める', target: 10, reached: false },
-                    { id: 'apprentice', title: '見習い職人', desc: '城壁を3つ造る', target: 3, type: 'wall', reached: false },
-                    { id: 'tower_master', title: '塔の主', desc: '塔を1つ建てる', target: 1, type: 'tower', reached: false }
-                ]
-            },
-
-            init() {
-                this.renderGrid();
-                this.updateUI();
-                this.initChart();
-                this.startHistoryTracker();
-            },
-
-            renderGrid() {
-                const grid = document.getElementById('mine-grid');
-                for (let i = 0; i < 9; i++) {
-                    const block = document.createElement('div');
-                    block.className = 'h-20 bg-slate-400 rounded-xl shadow-md border-b-4 border-slate-500 active:border-b-0 active:translate-y-1 mine-block flex items-center justify-center text-2xl';
-                    block.innerHTML = '🪨';
-                    block.onclick = () => this.mine(block);
-                    grid.appendChild(block);
-                }
-            },
-
-            mine(el) {
-                this.data.stones++;
-                this.data.totalMined++;
-                
-                // エフェクト
-                el.style.backgroundColor = '#94a3b8';
-                setTimeout(() => el.style.backgroundColor = '#cbd5e1', 50);
-
-                this.updateUI();
-                this.checkAchievements();
-            },
-
-            craft(type) {
-                const costs = { wall: 10, tower: 50 };
-                if (this.data.stones >= costs[type]) {
-                    this.data.stones -= costs[type];
-                    this.data.parts.push(type);
-                    this.data.castleLevel++;
-                    this.updateUI();
-                    this.renderCastle();
-                    this.checkAchievements();
-                }
-            },
-
-            updateUI() {
-                document.getElementById('stone-count').innerText = this.data.stones;
-                document.getElementById('castle-level').innerText = this.data.castleLevel;
-                
-                document.getElementById('btn-craft-wall').disabled = this.data.stones < 10;
-                document.getElementById('btn-craft-tower').disabled = this.data.stones < 50;
-
-                this.renderAchievements();
-            },
-
-            renderCastle() {
-                const display = document.getElementById('castle-display');
-                display.innerHTML = '';
-                
-                if (this.data.parts.length === 0) {
-                    display.innerHTML = '<div class="text-indigo-300 text-xs italic mb-4">まだ何も建設されていません</div>';
-                    return;
-                }
-
-                this.data.parts.forEach(part => {
-                    const div = document.createElement('div');
-                    if (part === 'wall') {
-                        div.className = 'w-8 bg-slate-300 border-2 border-slate-400 rounded-sm castle-part';
-                        div.style.height = '40px';
-                    } else {
-                        div.className = 'w-10 bg-amber-200 border-2 border-amber-400 rounded-t-lg castle-part';
-                        div.style.height = '80px';
-                    }
-                    display.appendChild(div);
-                });
-            },
-
-            renderAchievements() {
-                const list = document.getElementById('achievement-list');
-                list.innerHTML = '';
-                this.data.achievements.forEach(ach => {
-                    const card = document.createElement('div');
-                    card.className = `p-3 rounded-xl border flex items-center justify-between ${ach.reached ? 'bg-amber-50 border-amber-200' : 'bg-white border-slate-100'}`;
-                    
-                    card.innerHTML = `
-                        <div>
-                            <div class="text-sm font-bold ${ach.reached ? 'text-amber-800' : 'text-slate-400'}">${ach.title}</div>
-                            <div class="text-xs text-slate-400">${ach.desc}</div>
-                        </div>
-                        <div class="text-xl">${ach.reached ? '✨' : '🔒'}</div>
-                    `;
-                    list.appendChild(card);
-                });
-            },
-
-            checkAchievements() {
-                this.data.achievements.forEach(ach => {
-                    if (ach.reached) return;
-
-                    let isAchieved = false;
-                    if (ach.id === 'first_stone' && this.data.totalMined >= ach.target) isAchieved = true;
-                    if (ach.type === 'wall' && this.data.parts.filter(p => p === 'wall').length >= ach.target) isAchieved = true;
-                    if (ach.type === 'tower' && this.data.parts.filter(p => p === 'tower').length >= ach.target) isAchieved = true;
-
-                    if (isAchieved) {
-                        ach.reached = true;
-                        this.showToast(`${ach.title} を解除しました！`);
-                        this.updateUI();
-                    }
-                });
-            },
-
-            showToast(msg) {
-                const toast = document.getElementById('toast');
-                toast.innerText = msg;
-                toast.style.opacity = '1';
-                setTimeout(() => toast.style.opacity = '0', 3000);
-            },
-
-            initChart() {
-                const ctx = document.getElementById('statsChart').getContext('2d');
-                this.chart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: Array(10).fill(''),
-                        datasets: [{
-                            label: '採掘量推移',
-                            data: Array(10).fill(0),
-                            borderColor: '#f59e0b',
-                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                            fill: true,
-                            tension: 0.4,
-                            pointRadius: 0
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            y: { beginAtZero: true, grid: { display: false }, ticks: { display: false } },
-                            x: { grid: { display: false } }
-                        }
-                    }
-                });
-            },
-
-            startHistoryTracker() {
-                let lastCount = 0;
-                setInterval(() => {
-                    const currentMined = this.data.totalMined;
-                    const diff = currentMined - lastCount;
-                    lastCount = currentMined;
-
-                    this.chart.data.datasets[0].data.push(diff);
-                    this.chart.data.datasets[0].data.shift();
-                    this.chart.update('none');
-                }, 2000);
-            }
+        const state = {
+            res: { 水:0, 草:0, 木材:0, 石材:0, 銅鉱石:0, 鉄鉱石:0, 銀鉱石:0, 金鉱石:0, チタン鉱石:0 },
+            buildings: [],
+            miners: 0
         };
 
-        window.onload = () => app.init();
+        const recipes = {
+            "水堀": { cost: { 水: 10 }, effect: "防衛" },
+            "木の壁": { cost: { 木材: 20 }, effect: "防衛" },
+            "銅の弓兵": { cost: { 銅鉱石: 50 }, effect: "防衛部隊" },
+            "鉄の砲兵": { cost: { 鉄鉱石: 100 }, effect: "防衛部隊" },
+            "放置掘削機": { cost: { 石材: 100, 鉄鉱石: 50 }, effect: "自動生産" }
+        };
+
+        function updateUI() {
+            document.getElementById('resources').innerHTML = Object.entries(state.res)
+                .map(([k, v]) => `${k}:${v}`).join(' ');
+        }
+
+        // 放置収益
+        setInterval(() => {
+            state.res.石材 += state.miners;
+            updateUI();
+        }, 1000);
+
+        // 初期化
+        const mineGrid = document.getElementById('mine-buttons');
+        Object.keys(state.res).forEach(type => {
+            const btn = document.createElement('button');
+            btn.className = "bg-slate-700 p-2 rounded text-xs hover:bg-slate-600";
+            btn.innerText = type;
+            btn.onclick = () => { state.res[type]++; updateUI(); };
+            mineGrid.appendChild(btn);
+        });
+
+        updateUI();
     </script>
 </body>
 </html>
