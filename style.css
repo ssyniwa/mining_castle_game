@@ -1,0 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Noto+Sans+JP:wght@400;700&display=swap');
+
+body {
+    font-family: 'Inter', 'Noto Sans JP', sans-serif;
+    background-color: #f8fafc;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.chart-container {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    height: 250px;
+    max-height: 300px;
+}
+
+.mine-block {
+    transition: transform 0.1s active, background-color 0.2s;
+    cursor: pointer;
+}
+
+.mine-block:active {
+    transform: scale(0.95);
+}
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.castle-part {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
