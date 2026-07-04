@@ -5,67 +5,91 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kingdom Builder</title>
     <style>
-        body { font-family: sans-serif; background: #2c3e50; color: white; text-align: center; margin: 0; padding: 10px; }
-        #game-view { background: #34495e; padding: 20px; border-radius: 10px; min-height: 300px; }
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
-        button { padding: 15px; border: none; border-radius: 5px; cursor: pointer; background: #3498db; color: white; }
-        #stats { font-size: 1.2em; margin-bottom: 20px; }
+        body { font-family: sans-serif; background: #1a1a2e; color: #e0e0e0; margin: 0; padding: 10px; }
+        .tab-content { display: none; padding: 10px; }
+        .active { display: block; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        button { padding: 15px; border: none; border-radius: 8px; background: #4e4e6a; color: white; }
+        button:disabled { background: #333; opacity: 0.6; }
+        .stats { background: #16213e; padding: 10px; border-radius: 8px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-    <div id="stats">
-        資金: <span id="gold">0</span> | 材料: <span id="materials">0</span>
+<div class="stats" id="stats">
+    <!-- 素材表示エリア -->
+    <div id="material-list"></div>
+</div>
+
+<nav>
+    <button onclick="showTab('mine')">採掘</button>
+    <button onclick="showTab('build')">建築</button>
+</nav>
+
+<div id="mine" class="tab-content active">
+    <h3>採掘場</h3>
+    <button onclick="mine('wood')">木材を伐採</button>
+    <button onclick="mine('stone')">石材を掘る</button>
+    <button onclick="mine('iron')">鉄鉱石を掘る</button>
+</div>
+
+<div id="build" class="tab-content">
+    <h3>工房・建築</h3>
+    <div class="grid">
+        <button onclick="build('wooden_wall')">木の壁 (木材x5)</button>
+        <button onclick="build('stone_tower')">石の監視棟 (石材x5, 鉄x2)</button>
     </div>
+</div>
 
-    <div id="game-view">
-        <h2 id="castle-status">未開の地</h2>
-        <div id="display" style="font-size: 50px;">🏰</div>
-        <div class="grid">
-            <button onclick="mine()">採掘する</button>
-            <button onclick="build()">建築する</button>
-            <button onclick="upgrade()">目標達成</button>
-        </div>
-    </div>
+<script>
+    const state = {
+        materials: { wood: 0, stone: 0, iron: 0 },
+        buildings: { wooden_wall: 0, stone_tower: 0 }
+    };
 
-    <script>
-        let state = { money: 0, materials: 0, level: 0 };
-        
-        function mine() {
-            state.materials += 1;
-            updateUI();
-        }
+    function mine(type) {
+        state.materials[type]++;
+        updateUI();
+    }
 
-        function build() {
-            if (state.materials >= 10) {
-                state.materials -= 10;
-                state.money += 5;
-                alert("壁を建築しました！");
-                updateUI();
-            } else {
+    function build(item) {
+        const costs = {
+            wooden_wall: { wood: 5 },
+            stone_tower: { stone: 5, iron: 2 }
+        };
+
+        // コスト確認
+        for (let mat in costs[item]) {
+            if (state.materials[mat] < costs[item][mat]) {
                 alert("材料が足りません！");
+                return;
             }
         }
 
-        function upgrade() {
-            if (state.money >= 50) {
-                state.money -= 50;
-                state.level++;
-                document.getElementById('castle-status').innerText = "レベル " + state.level + " の城";
-                alert("城が豪華になりました！");
-            }
+        // 消費
+        for (let mat in costs[item]) {
+            state.materials[mat] -= costs[item][mat];
         }
+        state.buildings[item]++;
+        alert(item + " を建設しました！");
+        updateUI();
+    }
 
-        function updateUI() {
-            document.getElementById('gold').innerText = state.money;
-            document.getElementById('materials').innerText = state.materials;
+    function updateUI() {
+        // 素材表示の更新
+        let html = "素材: ";
+        for (let m in state.materials) {
+            html += `${m}:${state.materials[m]} `;
         }
+        document.getElementById('material-list').innerHTML = html;
+    }
 
-        // 放置収益（掘削機）
-        setInterval(() => {
-            state.materials += 1;
-            updateUI();
-        }, 5000);
-    </script>
+    function showTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+        document.getElementById(tabId).style.display = 'block';
+    }
+
+    updateUI();
+</script>
 </body>
 </html>
