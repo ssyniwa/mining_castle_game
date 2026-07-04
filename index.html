@@ -10,21 +10,20 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         .card { background: #16213e; border-radius: 12px; padding: 15px; margin: 10px 0; }
-        .castle-bg { transition: all 0.5s; background-size: cover; background-position: center; }
+        .castle-bg { transition: all 0.5s; background-size: cover; background-position: center; min-height: 200px; }
         .btn-action { background: #4e4e6a; padding: 10px; border-radius: 8px; width: 100%; margin-top: 5px; }
         .btn-action:active { transform: scale(0.98); }
+        .facility-block { display: inline-block; padding: 4px 8px; margin: 2px; border-radius: 4px; font-size: 0.75rem; background: #2c3e50; border: 1px solid #4a5568; }
     </style>
 </head>
 <body class="p-4 max-w-md mx-auto">
 
-    <div id="castle-area" class="castle-bg card text-center min-h-[150px] flex flex-col justify-center items-center">
-        <h1 id="castle-title" class="text-2xl font-bold">小作の小屋</h1>
-        <p id="castle-desc">城の完成を目指そう！</p>
+    <div id="castle-area" class="castle-bg card text-center flex flex-col items-center">
+        <h1 id="castle-title" class="text-2xl font-bold mt-2">小作の小屋</h1>
+        <div id="facility-display" class="mt-4 flex flex-wrap justify-center gap-1"></div>
     </div>
 
-    <div class="mt-4 grid grid-cols-2 gap-2 text-sm" id="resource-display">
-        <!-- 資源表示エリア -->
-    </div>
+    <div class="mt-4 grid grid-cols-3 gap-2 text-xs" id="resource-display"></div>
 
     <div class="flex gap-2 mt-6 overflow-x-auto pb-2">
         <button onclick="showTab('mine')" class="px-4 py-2 bg-blue-700 rounded-lg">採掘</button>
@@ -33,17 +32,17 @@
     </div>
 
     <div id="mine" class="tab-content active mt-4">
-        <h2 class="text-lg font-bold mb-2">採掘現場</h2>
-        <div id="mining-nodes" class="grid grid-cols-2 gap-2"></div>
+        <h2 class="text-lg font-bold mb-2">採掘・掘削機</h2>
+        <div id="mining-nodes" class="grid grid-cols-1 gap-2"></div>
     </div>
 
     <div id="build" class="tab-content mt-4">
-        <h2 class="text-lg font-bold mb-2">施設・部隊建築</h2>
+        <h2 class="text-lg font-bold mb-2">建築メニュー</h2>
         <div id="build-list"></div>
     </div>
 
     <div id="goals" class="tab-content mt-4">
-        <h2 class="text-lg font-bold mb-2">目標リスト</h2>
+        <h2 class="text-lg font-bold mb-2">達成目標</h2>
         <div id="goal-list"></div>
     </div>
 
@@ -51,93 +50,95 @@
         const state = {
             res: { water: 0, grass: 0, wood: 0, stone: 0, copper: 0, iron: 0, silver: 0, gold: 0, titanium: 0 },
             excavators: { water: 0, grass: 0, wood: 0, stone: 0, copper: 0, iron: 0, silver: 0, gold: 0, titanium: 0 },
-            buildings: {},
+            buildings: [],
             goals: [
-                { id: 1, title: "基礎固め", desc: "草を10個集める", check: () => state.res.grass >= 10, done: false },
-                { id: 2, title: "砦の建設", desc: "木の壁を建てる", check: () => (state.buildings.woodWall || 0) >= 1, done: false },
-                { id: 3, title: "鉄壁の要塞", desc: "鉄の監視棟を建てる", check: () => (state.buildings.ironWatchtower || 0) >= 1, done: false },
-                { id: 4, title: "黄金の城", desc: "金の装飾棟を建てる", check: () => (state.buildings.goldOrnament || 0) >= 1, done: false },
-                { id: 5, title: "未来の要塞", desc: "未来の防衛棟を建てる", check: () => (state.buildings.futureDef || 0) >= 1, done: false }
+                { id: 1, title: "初歩", desc: "木材を20個集める", check: () => state.res.wood >= 20, done: false },
+                { id: 2, title: "拠点", desc: "木の壁を1つ建てる", check: () => state.buildings.includes("木の壁"), done: false },
+                { id: 3, title: "鉄壁", desc: "鉄の監視棟を1つ建てる", check: () => state.buildings.includes("鉄の監視棟"), done: false },
+                { id: 4, title: "黄金", desc: "金の装飾棟を1つ建てる", check: () => state.buildings.includes("金の装飾棟"), done: false }
             ]
         };
 
         const recipes = {
-            waterMoat: { name: "水堀", cost: { water: 50 }, type: "facility" },
-            grassWall: { name: "草の壁", cost: { grass: 20 }, type: "facility" },
-            woodWall: { name: "木の壁", cost: { wood: 50 }, type: "facility" },
-            torch: { name: "松明", cost: { wood: 10 }, type: "facility" },
-            stoneWall: { name: "石の壁", cost: { stone: 50 }, type: "facility" },
-            stoneWatch: { name: "石の監視棟", cost: { stone: 100 }, type: "facility" },
-            copperWatch: { name: "銅の監視棟", cost: { copper: 50 }, type: "facility" },
-            copperArcher: { name: "銅の弓兵", cost: { copper: 80 }, type: "unit" },
-            ironWatch: { name: "鉄の監視棟", cost: { iron: 100 }, type: "facility" },
-            ironSpear: { name: "鉄の槍兵", cost: { iron: 80 }, type: "unit" },
-            ironArtillery: { name: "鉄の砲兵", cost: { iron: 200 }, type: "unit" },
-            silverOrnament: { name: "銀の装飾棟", cost: { silver: 500 }, type: "facility" },
-            goldOrnament: { name: "金の装飾棟", cost: { gold: 500 }, type: "facility" },
-            futureDef: { name: "未来の防衛棟", cost: { titanium: 1000 }, type: "facility" }
+            waterMoat: { name: "水堀", cost: { water: 50 } },
+            grassWall: { name: "草の壁", cost: { grass: 20 } },
+            woodWall: { name: "木の壁", cost: { wood: 50 } },
+            torch: { name: "松明", cost: { wood: 10 } },
+            stoneWall: { name: "石の壁", cost: { stone: 50 } },
+            stoneWatch: { name: "石の監視棟", cost: { stone: 100 } },
+            copperWatch: { name: "銅の監視棟", cost: { copper: 50 } },
+            copperArcher: { name: "銅の弓兵", cost: { copper: 80 } },
+            ironWatch: { name: "鉄の監視棟", cost: { iron: 100 } },
+            ironSpear: { name: "鉄の槍兵", cost: { iron: 80 } },
+            ironArtillery: { name: "鉄の砲兵", cost: { iron: 200 } },
+            silverOrnament: { name: "銀の装飾棟", cost: { silver: 500 } },
+            goldOrnament: { name: "金の装飾棟", cost: { gold: 500 } },
+            futureDef: { name: "未来の防衛棟", cost: { titanium: 1000 } }
         };
 
         function render() {
-            // 資源更新
-            const resHtml = Object.keys(state.res).map(key => 
-                `<div class="card p-2"><div>${key.toUpperCase()}</div><div class="font-bold">${Math.floor(state.res[key])}</div></div>`
+            // 資源
+            document.getElementById('resource-display').innerHTML = Object.keys(state.res).map(key => 
+                `<div class="card p-1 text-center"><div>${key}</div><div class="font-bold">${Math.floor(state.res[key])}</div></div>`
             ).join('');
-            document.getElementById('resource-display').innerHTML = resHtml;
 
-            // 採掘ノード更新
-            const nodesHtml = Object.keys(state.res).map(key => 
-                `<button onclick="mine('${key}')" class="btn-action">掘る: ${key.toUpperCase()}<br><small>掘削機: ${state.excavators[key]}</small></button>`
-            ).join('');
-            document.getElementById('mining-nodes').innerHTML = nodesHtml;
-
-            // 建築リスト更新
-            const buildHtml = Object.keys(recipes).map(key => 
-                `<div class="card">
-                    <p class="font-bold">${recipes[key].name}</p>
-                    <button onclick="build('${key}')" class="btn-action bg-green-600">建築 (cost: ${JSON.stringify(recipes[key].cost)})</button>
+            // 採掘
+            document.getElementById('mining-nodes').innerHTML = Object.keys(state.res).map(key => 
+                `<div class="flex gap-2 items-center">
+                    <button onclick="mine('${key}')" class="btn-action">採掘: ${key}</button>
+                    <button onclick="buyExcavator('${key}')" class="bg-purple-700 p-2 rounded text-[10px]">掘削機<br>(${state.excavators[key]})</button>
                 </div>`
             ).join('');
-            document.getElementById('build-list').innerHTML = buildHtml;
 
-            // 目標チェック
-            state.goals.forEach(g => {
-                if (!g.done && g.check()) {
-                    g.done = true;
-                    updateCastleVisual();
-                }
-            });
-            const goalHtml = state.goals.map(g => 
-                `<div class="card ${g.done ? 'bg-green-900' : 'bg-red-900'}">${g.title}: ${g.desc} ${g.done ? '✓' : ''}</div>`
+            // 建築
+            document.getElementById('build-list').innerHTML = Object.keys(recipes).map(key => 
+                `<div class="card flex justify-between items-center">
+                    <span>${recipes[key].name}</span>
+                    <button onclick="build('${key}')" class="bg-green-600 px-3 py-1 rounded">建てる</button>
+                </div>`
             ).join('');
-            document.getElementById('goal-list').innerHTML = goalHtml;
+
+            // 城の表示
+            document.getElementById('facility-display').innerHTML = state.buildings.map(name => 
+                `<span class="facility-block">${name}</span>`
+            ).join('');
+
+            // 目標
+            document.getElementById('goal-list').innerHTML = state.goals.map(g => 
+                `<div class="card ${g.done ? 'bg-green-900' : 'bg-slate-800'}">${g.title}: ${g.desc}</div>`
+            ).join('');
+
+            checkGoals();
         }
 
         function mine(res) { state.res[res] += 1; render(); }
+        
+        function buyExcavator(res) {
+            if (state.res[res] >= 50) {
+                state.res[res] -= 50;
+                state.excavators[res] += 1;
+                render();
+            }
+        }
 
-        function build(itemKey) {
-            const cost = recipes[itemKey].cost;
-            for (let res in cost) {
-                if (state.res[res] < cost[res]) return;
-            }
-            for (let res in cost) {
-                state.res[res] -= cost[res];
-            }
-            state.buildings[itemKey] = (state.buildings[itemKey] || 0) + 1;
+        function build(key) {
+            const recipe = recipes[key];
+            for (let r in recipe.cost) if (state.res[r] < recipe.cost[r]) return;
+            for (let r in recipe.cost) state.res[r] -= recipe.cost[r];
+            state.buildings.push(recipe.name);
             render();
         }
 
-        function updateCastleVisual() {
-            const completedCount = state.goals.filter(g => g.done).length;
+        function checkGoals() {
+            state.goals.forEach(g => { if (!g.done && g.check()) { g.done = true; updateVisual(); } });
+        }
+
+        function updateVisual() {
+            const count = state.goals.filter(g => g.done).length;
             const el = document.getElementById('castle-area');
             const title = document.getElementById('castle-title');
-            if (completedCount >= 4) {
-                el.className = "castle-bg card text-center min-h-[150px] flex flex-col justify-center items-center bg-yellow-900";
-                title.innerText = "伝説の黄金城";
-            } else if (completedCount >= 2) {
-                el.className = "castle-bg card text-center min-h-[150px] flex flex-col justify-center items-center bg-slate-700";
-                title.innerText = "堅牢な石城";
-            }
+            if (count >= 3) { el.className = "castle-bg card text-center bg-yellow-800 flex flex-col items-center"; title.innerText = "伝説の黄金城"; }
+            else if (count >= 1) { el.className = "castle-bg card text-center bg-slate-800 flex flex-col items-center"; title.innerText = "要塞都市"; }
         }
 
         function showTab(id) {
@@ -146,9 +147,7 @@
         }
 
         setInterval(() => {
-            Object.keys(state.excavators).forEach(res => {
-                state.res[res] += state.excavators[res] * 0.5;
-            });
+            Object.keys(state.excavators).forEach(r => state.res[r] += state.excavators[r] * 0.2);
             render();
         }, 1000);
 
