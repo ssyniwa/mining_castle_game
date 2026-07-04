@@ -14,9 +14,9 @@
         .btn-action { background: #3b82f6; color: white; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; }
         .btn-action:active { transform: scale(0.97); }
         .facility-block { 
-            display: inline-block; padding: 8px 12px; margin: 4px; border-radius: 6px; 
-            background: #475569; border-bottom: 4px solid #1e293b; font-size: 0.85rem; 
-            font-weight: bold; color: #e2e8f0;
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 40px; height: 40px; margin: 4px; border-radius: 8px; 
+            background: #475569; border-bottom: 4px solid #1e293b; font-size: 1.5rem; 
         }
     </style>
 </head>
@@ -25,7 +25,7 @@
     <div id="castle-area" class="castle-area text-center shadow-2xl">
         <h1 id="castle-title" class="text-3xl font-bold mt-2 text-white">小さな開拓地</h1>
         <p id="castle-desc" class="text-sm text-slate-400 mb-4">施設を建設して城を大きくしよう</p>
-        <div id="facility-display" class="flex flex-wrap justify-center gap-2 mt-2"></div>
+        <div id="facility-display" class="flex flex-wrap justify-center gap-1 mt-2"></div>
     </div>
 
     <div class="mt-6 grid grid-cols-3 gap-2" id="resource-display"></div>
@@ -58,31 +58,30 @@
             buildings: [],
             goals: [
                 { id: 1, title: "開拓者", desc: "木材を20個集める", check: () => state.res.wood >= 20, done: false },
-                { id: 2, title: "城壁建築", desc: "木の壁を1つ建てる", check: () => state.buildings.includes("木の壁"), done: false },
-                { id: 3, title: "鉄壁の防衛", desc: "鉄の監視棟を1つ建てる", check: () => state.buildings.includes("鉄の監視棟"), done: false },
-                { id: 4, title: "黄金の都", desc: "金の装飾棟を1つ建てる", check: () => state.buildings.includes("金の装飾棟"), done: false }
+                { id: 2, title: "城壁建築", desc: "木の壁を1つ建てる", check: () => state.buildings.includes("woodWall"), done: false },
+                { id: 3, title: "鉄壁の防衛", desc: "鉄の監視棟を1つ建てる", check: () => state.buildings.includes("ironWatch"), done: false },
+                { id: 4, title: "黄金の都", desc: "金の装飾棟を1つ建てる", check: () => state.buildings.includes("goldOrnament"), done: false }
             ]
         };
 
         const recipes = {
-            waterMoat: { name: "水堀", cost: { water: 50 } },
-            grassWall: { name: "草の壁", cost: { grass: 20 } },
-            woodWall: { name: "木の壁", cost: { wood: 50 } },
-            torch: { name: "松明", cost: { wood: 10 } },
-            stoneWall: { name: "石の壁", cost: { stone: 50 } },
-            stoneWatch: { name: "石の監視棟", cost: { stone: 100 } },
-            copperWatch: { name: "銅の監視棟", cost: { copper: 50 } },
-            copperArcher: { name: "銅の弓兵", cost: { copper: 80 } },
-            ironWatch: { name: "鉄の監視棟", cost: { iron: 100 } },
-            ironSpear: { name: "鉄の槍兵", cost: { iron: 80 } },
-            ironArtillery: { name: "鉄の砲兵", cost: { iron: 200 } },
-            silverOrnament: { name: "銀の装飾棟", cost: { silver: 500 } },
-            goldOrnament: { name: "金の装飾棟", cost: { gold: 500 } },
-            futureDef: { name: "未来の防衛棟", cost: { titanium: 1000 } }
+            waterMoat: { name: "水堀", cost: { water: 50 }, icon: "💧" },
+            grassWall: { name: "草の壁", cost: { grass: 20 }, icon: "🌿" },
+            woodWall: { name: "木の壁", cost: { wood: 50 }, icon: "🪵" },
+            torch: { name: "松明", cost: { wood: 10 }, icon: "🔥" },
+            stoneWall: { name: "石の壁", cost: { stone: 50 }, icon: "🧱" },
+            stoneWatch: { name: "石の監視棟", cost: { stone: 100 }, icon: "🏰" },
+            copperWatch: { name: "銅の監視棟", cost: { copper: 50 }, icon: "🥉" },
+            copperArcher: { name: "銅の弓兵", cost: { copper: 80 }, icon: "🏹" },
+            ironWatch: { name: "鉄の監視棟", cost: { iron: 100 }, icon: "🛡️" },
+            ironSpear: { name: "鉄の槍兵", cost: { iron: 80 }, icon: "⚔️" },
+            ironArtillery: { name: "鉄の砲兵", cost: { iron: 200 }, icon: "💣" },
+            silverOrnament: { name: "銀の装飾棟", cost: { silver: 500 }, icon: "🥈" },
+            goldOrnament: { name: "金の装飾棟", cost: { gold: 500 }, icon: "👑" },
+            futureDef: { name: "未来の防衛棟", cost: { titanium: 1000 }, icon: "🚀" }
         };
 
         function render() {
-            // 資源
             document.getElementById('resource-display').innerHTML = Object.keys(state.res).map(key => 
                 `<div class="card p-2 text-center text-xs">
                     <div class="text-slate-400">${key.toUpperCase()}</div>
@@ -90,7 +89,6 @@
                 </div>`
             ).join('');
 
-            // 採掘と掘削機
             document.getElementById('mining-nodes').innerHTML = Object.keys(state.res).map(key => 
                 `<div class="flex gap-2 items-center bg-slate-800 p-2 rounded">
                     <button onclick="mine('${key}')" class="flex-1 text-left p-2">採掘: ${key}</button>
@@ -98,23 +96,20 @@
                 </div>`
             ).join('');
 
-            // 建築
             document.getElementById('build-list').innerHTML = Object.keys(recipes).map(key => 
                 `<div class="card flex justify-between items-center">
                     <div>
-                        <div class="font-bold">${recipes[key].name}</div>
+                        <div class="font-bold">${recipes[key].icon} ${recipes[key].name}</div>
                         <div class="text-xs text-slate-400">Cost: ${Object.entries(recipes[key].cost).map(e=>e[1]+e[0]).join(', ')}</div>
                     </div>
                     <button onclick="build('${key}')" class="bg-green-700 px-4 py-2 rounded font-bold">建設</button>
                 </div>`
             ).join('');
 
-            // 城の視覚化（施設ブロック）
-            document.getElementById('facility-display').innerHTML = state.buildings.map(name => 
-                `<span class="facility-block shadow-lg">${name}</span>`
+            document.getElementById('facility-display').innerHTML = state.buildings.map(bKey => 
+                `<span class="facility-block shadow-lg">${recipes[bKey].icon}</span>`
             ).join('');
 
-            // 目標
             document.getElementById('goal-list').innerHTML = state.goals.map(g => 
                 `<div class="card ${g.done ? 'bg-green-900 border-green-700' : 'bg-slate-800'} text-sm">
                     <div class="font-bold">${g.title}</div>
@@ -140,7 +135,7 @@
             const recipe = recipes[key];
             for (let r in recipe.cost) if (state.res[r] < recipe.cost[r]) return;
             for (let r in recipe.cost) state.res[r] -= recipe.cost[r];
-            state.buildings.push(recipe.name);
+            state.buildings.push(key);
             render();
         }
 
