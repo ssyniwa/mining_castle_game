@@ -110,7 +110,7 @@ def build_drill(mat):
     else:
         st.error("鉄鉱石が50必要です！")
 
-update_resources()
+
 # --- UI ---
 st.title("🏰 城建設クラフト")
 tab1, tab2, tab3 = st.tabs(["⛏️ 採掘", "🔨 建築", "🏰 配置"])
@@ -120,6 +120,7 @@ with tab1:
     cols = st.columns(3)
     for i, mat in enumerate(st.session_state.inventory.keys()):
         if cols[i % 3].button(mat):
+            update_resources()
             st.session_state.inventory[mat] += 1
             st.rerun()
 
@@ -131,11 +132,13 @@ with tab2:
         
         # ボタンにレシピ情報を付与
         if st.button(f"{b_name} ({recipe_str})を作る"):
+            update_resources()
             build_structure(b_name)
             st.rerun()
     st.subheader("掘削機をクラフト")
     target_mat = st.selectbox("掘削する材料を選択:", list(st.session_state.inventory.keys()))
     if st.button(f"{target_mat}用掘削機を作る (コスト: 鉄鉱石50)"):
+        update_resources()
         build_drill(target_mat)
         st.rerun()
 
@@ -178,6 +181,7 @@ with tab3:
                     cols[x].image(img_path, width=200)
                 else:
                     if cols[x].button("＋", key=f"btn_{x}_{y}"):
+                        update_resources()
                         st.session_state.map_data[pos] = selected
                         st.session_state.buildings.remove(selected)
                         st.rerun()
