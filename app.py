@@ -205,7 +205,7 @@ with tab3:
                 
                 if building_name and os.path.exists(img_path):
                     # 画像にキャプションを追加して情報量を増やす
-                    cols[x].image(img_path, width=60, caption=building_name)
+                    cols[x].image(img_path, width=200)
                 else:
                     # 空地ボタンの見た目を少し強調
                     if cols[x].button("＋", key=f"btn_{x}_{y}"):
