@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 import pandas as pd
+import time # 追加
 # --- 設定 ---
 # プロジェクトフォルダ内に "images" というフォルダを作成し、
 # 建築物名に対応する画像ファイル（例: 水堀.png）を格納してください。
@@ -19,7 +20,10 @@ if 'buildings' not in st.session_state:
     st.session_state.buildings = []
 if 'map_data' not in st.session_state:
     st.session_state.map_data = {}
-
+if 'last_update' not in st.session_state:
+    st.session_state.last_update = time.time()
+if 'drills' not in st.session_state:
+    st.session_state.drills = {mat: 0 for mat in st.session_state.inventory.keys()}
 # レシピ定義
 # 拡張版RECIPESの例
 RECIPES = {
@@ -85,6 +89,28 @@ def check_goals():
     "未来の防衛棟を2つ配置": list(st.session_state.map_data.values()).count("未来の防衛棟") >= 2
 }
     return goals
+
+# --- 2. 材料自動加算ロジック (UI表示の前に実行) ---
+def update_resources():
+    now = time.time()
+    elapsed = now - st.session_state.last_update
+    # 10秒ごとに1つ生産すると仮定
+    for mat, count in st.session_state.drills.items():
+        if count > 0:
+            st.session_state.inventory[mat] += count * (elapsed // 10)
+    st.session_state.last_update = now
+
+
+def build_drill(mat):
+    cost = 50 # 掘削機のコスト
+    if st.session_state.inventory.get('鉄鉱石', 0) >= cost:
+        st.session_state.inventory['鉄鉱石'] -= cost
+        st.session_state.drills[mat] += 1
+        st.success(f"{mat}用掘削機を建設しました！")
+    else:
+        st.error("鉄鉱石が50必要です！")
+
+update_resources()
 # --- UI ---
 st.title("🏰 城建設クラフト")
 tab1, tab2, tab3 = st.tabs(["⛏️ 採掘", "🔨 建築", "🏰 配置"])
@@ -103,6 +129,11 @@ with tab2:
         if st.button(f"{b_name} を作る"):
             build_structure(b_name)
             st.rerun()
+    st.subheader("掘削機をクラフト")
+    target_mat = st.selectbox("掘削する材料を選択:", list(st.session_state.inventory.keys()))
+    if st.button(f"{target_mat}用掘削機を作る (コスト: 鉄鉱石50)"):
+        build_drill(target_mat)
+        st.rerun()
 
 with tab3:
     st.subheader("城を設計する")
