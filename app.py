@@ -125,8 +125,12 @@ with tab1:
 
 with tab2:
     st.subheader("建築物をクラフト")
-    for b_name in RECIPES.keys():
-        if st.button(f"{b_name} を作る"):
+    for b_name, recipe in RECIPES.items():
+        # 材料の表示用文字列を作成 (例: "水堀 (水: 5)")
+        recipe_str = ", ".join([f"{mat}: {amount}" for mat, amount in recipe.items()])
+        
+        # ボタンにレシピ情報を付与
+        if st.button(f"{b_name} ({recipe_str})を作る"):
             build_structure(b_name)
             st.rerun()
     st.subheader("掘削機をクラフト")
