@@ -152,6 +152,7 @@ with tab1:
 
 with tab2:
     st.subheader("建築物をクラフト")
+    
     for b_name, recipe in RECIPES.items():
         # 材料の表示用文字列を作成 (例: "水堀 (水: 5)")
         recipe_str = ", ".join([f"{mat}: {amount}" for mat, amount in recipe.items()])
