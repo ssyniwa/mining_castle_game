@@ -107,8 +107,15 @@ with tab2:
 with tab3:
     st.subheader("城を設計する")
     # 全配置リセットボタン
+    # 配置タブ内：リセットボタンの処理を修正
     if st.button("🏰 マップをリセット"):
+        # 配置済みの全ての建築物を取得してリストに戻す
+        for building_name in st.session_state.map_data.values():
+            st.session_state.buildings.append(building_name)
+        
+        # マップデータをクリア
         st.session_state.map_data = {}
+        st.success("配置をリセットし、建築物をリストに戻しました！")
         st.rerun()
 
     # 目標リストの表示
