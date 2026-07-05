@@ -104,12 +104,6 @@ def build_structure(name):
     st.success(f"{name}を建設しました！")
 def check_goals():
     goals = {
-    # 第1段階：基盤づくり
-    "水堀を3つ配置": list(st.session_state.map_data.values()).count("水堀") >= 3,
-    # 第3段階：金属防衛の導入
-    "鉄の監視棟を3つ配置": list(st.session_state.map_data.values()).count("鉄の監視棟") >= 3,
-    "鉄の砲兵を1つ配置": "鉄の砲兵" in st.session_state.map_data.values(),
-
     "鉄壁の要塞 (強度500以上)": calculate_score()["強度"] >= 500,
     "軍事拠点 (攻撃力300以上)": calculate_score()["攻撃"] >= 300,
     # --- 芸術特化型：美しさを重視 ---
