@@ -156,13 +156,7 @@ with tab3:
         st.success("配置をリセットし、建築物をリストに戻しました！")
         st.rerun()
 
-    # 目標リストの表示
-    st.write("--- 目標リスト ---")
-    goals = check_goals()
-    for goal, is_done in goals.items():
-        # 達成していると緑色、未達成は灰色で表示
-        color = "green" if is_done else "gray"
-        st.markdown(f":{color}[{'✅' if is_done else '⬜'} {goal}]")
+    
     if not st.session_state.buildings and not st.session_state.map_data:
         st.info("建築物を作るとここに表示されます")
     else:
@@ -186,8 +180,17 @@ with tab3:
                         st.session_state.buildings.remove(selected)
                         st.rerun()
 # --- ステータス表示（追加部分） ---
-st.divider() # 区切り線を表示
-with st.expander("📊 現在のステータス"):
+with st.sidebar:
+    st.header("📊 ダッシュボード")
+    
+    # 目標状況をサイドバーに移動
+    st.subheader("🎯 現在の目標")
+    goals = check_goals()
+    for goal, is_done in goals.items():
+        color = "green" if is_done else "gray"
+        st.markdown(f":{color}[{'✅' if is_done else '⬜'} {goal}]")
+        
+    st.divider()
     # 所持材料の表示
     st.subheader("🎒 所持材料")
     # DataFrameを使って表形式で表示
