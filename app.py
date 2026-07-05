@@ -4,47 +4,40 @@ import pandas as pd
 # ページ設定
 st.set_page_config(page_title="城建設クラフト", layout="centered")
 
-# --- 初期化 ---
+# --- セッション状態の初期化 ---
 if 'inventory' not in st.session_state:
     st.session_state.inventory = {
         '水': 0, '草': 0, '木材': 0, '石材': 0, 
         '銅鉱石': 0, '鉄鉱石': 0, '銀鉱石': 0, '金鉱石': 0, 'チタン鉱石': 0
     }
 if 'buildings' not in st.session_state:
-    st.session_state.buildings = []
+    st.session_state.buildings = [] # 所持している未配置の建築物
+if 'map_data' not in st.session_state:
+    st.session_state.map_data = {}  # {(x, y): 建築物名}
 
-# レシピ定義（必要な材料と数量）
+# レシピ定義
 RECIPES = {
-    "水堀": {"水": 5},
-    "草の壁": {"草": 5},
-    "木の壁": {"木材": 5},
-    "石の壁": {"石材": 5},
-    "石の監視棟": {"石材": 10},
-    "銅の監視棟": {"銅鉱石": 10},
-    "鉄の監視棟": {"鉄鉱石": 10},
-    "鉄の砲兵": {"鉄鉱石": 20},
-    "未来の防衛棟": {"チタン鉱石": 50}
+    "水堀": {"水": 5}, "草の壁": {"草": 5}, "木の壁": {"木材": 5},
+    "石の壁": {"石材": 5}, "石の監視棟": {"石材": 10},
+    "銅の監視棟": {"銅鉱石": 10}, "鉄の監視棟": {"鉄鉱石": 10},
+    "鉄の砲兵": {"鉄鉱石": 20}, "未来の防衛棟": {"チタン鉱石": 50}
 }
 
 # --- 関数 ---
 def build_structure(name):
-    recipe = RECIPES[name]
-    # 材料チェック
-    for mat, amount in recipe.items():
+    for mat, amount in RECIPES[name].items():
         if st.session_state.inventory[mat] < amount:
             st.error(f"{mat}が足りません！")
             return
-    # 材料消費
-    for mat, amount in recipe.items():
+    for mat, amount in RECIPES[name].items():
         st.session_state.inventory[mat] -= amount
     st.session_state.buildings.append(name)
-    st.success(f"{name}を建設しました！")
+    st.success(f"{name}をクラフトしました！")
 
 # --- UI ---
 st.title("🏰 城建設クラフト")
 
-# タブで採掘と建築を切り替え
-tab1, tab2 = st.tabs(["採掘", "建築"])
+tab1, tab2, tab3 = st.tabs(["⛏️ 採掘", "🔨 建築", "🏰 配置"])
 
 with tab1:
     st.subheader("採掘")
@@ -55,16 +48,36 @@ with tab1:
             st.rerun()
 
 with tab2:
-    st.subheader("建築")
+    st.subheader("建築物をクラフト")
     for b_name in RECIPES.keys():
         if st.button(f"{b_name} を作る"):
             build_structure(b_name)
             st.rerun()
 
-# ステータス表示
-st.divider()
-st.subheader("現在の所持品")
-st.write(st.session_state.inventory)
+with tab3:
+    st.subheader("城を設計する")
+    if not st.session_state.buildings:
+        st.info("建築物を作るとここに表示されます")
+    else:
+        # 配置する建築物の選択
+        selected = st.selectbox("配置する建築物:", st.session_state.buildings)
+        
+        # 5x5グリッド表示
+        for y in range(5):
+            cols = st.columns(5)
+            for x in range(5):
+                pos = (x, y)
+                content = st.session_state.map_data.get(pos, "＋")
+                if cols[x].button(content, key=f"btn_{x}_{y}"):
+                    if content == "＋":
+                        st.session_state.map_data[pos] = selected
+                        st.session_state.buildings.remove(selected)
+                        st.rerun()
+                    else:
+                        st.warning("すでに建築物があります")
 
-st.subheader("建築済みの施設")
-st.write(st.session_state.buildings)
+# --- ステータス表示 ---
+st.divider()
+with st.expander("詳細ステータス"):
+    st.write("所持材料:", st.session_state.inventory)
+    st.write("配置済みマップ:", st.session_state.map_data)
