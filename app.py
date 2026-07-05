@@ -193,24 +193,27 @@ with tab3:
         st.info("建築物を作るとここに表示されます")
     else:
         selected = st.selectbox("配置する建築物:", st.session_state.buildings)
-        
-        # 5x5 グリッド
+
+        # 枠で囲ってパネル化
+    with st.container(border=True):
         for y in range(5):
             cols = st.columns(5)
             for x in range(5):
                 pos = (x, y)
                 building_name = st.session_state.map_data.get(pos, None)
-                
-                # 画像の表示ロジック
                 img_path = os.path.join(IMAGE_DIR, f"{building_name}.png")
+                
                 if building_name and os.path.exists(img_path):
-                    cols[x].image(img_path, width=200)
+                    # 画像にキャプションを追加して情報量を増やす
+                    cols[x].image(img_path, width=60, caption=building_name)
                 else:
+                    # 空地ボタンの見た目を少し強調
                     if cols[x].button("＋", key=f"btn_{x}_{y}"):
                         update_resources()
                         st.session_state.map_data[pos] = selected
                         st.session_state.buildings.remove(selected)
                         st.rerun()
+        
     st.divider()
     st.subheader("🏰 城の評価")
     
