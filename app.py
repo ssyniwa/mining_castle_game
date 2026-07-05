@@ -59,7 +59,7 @@ with tab2:
 
 with tab3:
     st.subheader("城を設計する")
-    if not st.session_state.buildings:
+    if not st.session_state.buildings and not st.session_state.map_data:
         st.info("建築物を作るとここに表示されます")
     else:
         selected = st.selectbox("配置する建築物:", st.session_state.buildings)
