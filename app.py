@@ -80,3 +80,25 @@ with tab3:
                         st.session_state.map_data[pos] = selected
                         st.session_state.buildings.remove(selected)
                         st.rerun()
+# --- ステータス表示（追加部分） ---
+st.divider() # 区切り線を表示
+with st.expander("📊 現在のステータス"):
+    # 所持材料の表示
+    st.subheader("🎒 所持材料")
+    # DataFrameを使って表形式で表示
+    df_inventory = pd.DataFrame.from_dict(st.session_state.inventory, orient='index', columns=['数量'])
+    st.table(df_inventory)
+    
+    # 建築済み（配置前）の建築物リスト
+    st.subheader("🏗️ 未配置の建築物")
+    if st.session_state.buildings:
+        st.write(", ".join(st.session_state.buildings))
+    else:
+        st.write("なし")
+
+    # マップ配置データの表示
+    st.subheader("🏰 配置済みの施設")
+    if st.session_state.map_data:
+        st.write(st.session_state.map_data)
+    else:
+        st.write("まだ施設を配置していません")
