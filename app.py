@@ -118,7 +118,7 @@ def check_goals():
     "鉄の砲兵を1つ配置": "鉄の砲兵" in st.session_state.map_data.values(),
     
     # 第4段階：未来の城へ
-    "未来の防衛棟を2つ配置": list(st.session_state.map_data.values()).count("未来の防衛棟") >= 2
+    "未来の防衛棟を2つ配置": list(st.session_state.map_data.values()).count("未来の防衛棟") >= 2,
 
     "鉄壁の要塞 (強度500以上)": calculate_score()["強度"] >= 500,
     "軍事拠点 (攻撃力300以上)": calculate_score()["攻撃"] >= 300,
