@@ -59,7 +59,26 @@ RECIPES = {
     "水晶の塔": {"水晶": 20},
     "プラスチックの防衛棟": {"プラスチック": 20}
 }
+SCORING = {
+    "水堀": {"強度": 5, "攻撃": 0, "美": 0},
+    "木の壁": {"強度": 2, "攻撃": 0, "美": 0},
+    "石の壁": {"強度": 10, "攻撃": 0, "美": 0},
+    "石の監視棟": {"強度": 15, "攻撃": 5, "美": 0},
+    "鉄の砲兵": {"強度": 5, "攻撃": 30, "美": 0},
+    "鉄の銃兵": {"強度": 5, "攻撃": 20, "美": 0},
+    "銀の装飾棟": {"強度": 0, "攻撃": 0, "美": 20},
+    "金の装飾棟": {"強度": 0, "攻撃": 0, "美": 50},
+    "水晶の塔": {"強度": 5, "攻撃": 10, "美": 40},
+    "未来の防衛棟": {"強度": 50, "攻撃": 50, "美": 30}
+}
 
+def calculate_score():
+    total = {"強度": 0, "攻撃": 0, "美": 0}
+    for b_name in st.session_state.map_data.values():
+        if b_name in SCORING:
+            for key in total:
+                total[key] += SCORING[b_name].get(key, 0)
+    return total
 # --- 関数 ---
 def build_structure(name):
     for mat, amount in RECIPES[name].items():
@@ -179,6 +198,24 @@ with tab3:
                         st.session_state.map_data[pos] = selected
                         st.session_state.buildings.remove(selected)
                         st.rerun()
+    st.divider()
+    st.subheader("🏰 城の評価")
+    
+    # 全てのマス（25マス）が埋まっているかチェック
+    if len(st.session_state.map_data) == 25:
+        score = calculate_score()
+        st.success("城が完成しました！採点結果です：")
+        
+        col1, col2, col3 = st.columns(3)
+        col1.metric("強度", score["強度"])
+        col2.metric("攻撃力", score["攻撃"])
+        col3.metric("美しさ", score["美"])
+        
+        # 総合評価
+        total_score = sum(score.values())
+        st.write(f"### 総合スコア: {total_score}")
+    else:
+        st.info(f"城の採点を受けるには、すべてのマスに建築物を配置してください ({len(st.session_state.map_data)}/25)")
 # --- ステータス表示（追加部分） ---
 with st.sidebar:
     st.header("📊 ダッシュボード")
