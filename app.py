@@ -97,7 +97,7 @@ def update_resources():
     # 10秒ごとに1つ生産すると仮定
     for mat, count in st.session_state.drills.items():
         if count > 0:
-            st.session_state.inventory[mat] += count * (elapsed // 10)
+            st.session_state.inventory[mat] += count * (elapsed // 2)
     st.session_state.last_update = now
 
 
