@@ -68,9 +68,22 @@ def build_structure(name):
     st.success(f"{name}を建設しました！")
 def check_goals():
     goals = {
-        "石の壁を3つ配置": len([b for b in st.session_state.map_data.values() if b == "石の壁"]) >= 3,
-        "未来の防衛棟を1つ配置": "未来の防衛棟" in st.session_state.map_data.values()
-    }
+    # 第1段階：基盤づくり
+    "木の壁を5つ配置": list(st.session_state.map_data.values()).count("木の壁") >= 5,
+    "水堀を3つ配置": list(st.session_state.map_data.values()).count("水堀") >= 3,
+    
+    # 第2段階：石造りへの進化
+    "石の壁を5つ配置": list(st.session_state.map_data.values()).count("石の壁") >= 5,
+    "石の監視棟を2つ配置": list(st.session_state.map_data.values()).count("石の監視棟") >= 2,
+    
+    # 第3段階：金属防衛の導入
+    "銅の監視棟を2つ配置": list(st.session_state.map_data.values()).count("銅の監視棟") >= 2,
+    "鉄の監視棟を3つ配置": list(st.session_state.map_data.values()).count("鉄の監視棟") >= 3,
+    "鉄の砲兵を1つ配置": "鉄の砲兵" in st.session_state.map_data.values(),
+    
+    # 第4段階：未来の城へ
+    "未来の防衛棟を2つ配置": list(st.session_state.map_data.values()).count("未来の防衛棟") >= 2
+}
     return goals
 # --- UI ---
 st.title("🏰 城建設クラフト")
