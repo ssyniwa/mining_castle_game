@@ -74,7 +74,7 @@ with tab3:
                 # 画像の表示ロジック
                 img_path = os.path.join(IMAGE_DIR, f"{building_name}.png")
                 if building_name and os.path.exists(img_path):
-                    cols[x].image(img_path, width=50)
+                    cols[x].image(img_path, width=200)
                 else:
                     if cols[x].button("＋", key=f"btn_{x}_{y}"):
                         st.session_state.map_data[pos] = selected
