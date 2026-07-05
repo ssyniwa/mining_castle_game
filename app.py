@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-
+import pandas as pd
 # --- 設定 ---
 # プロジェクトフォルダ内に "images" というフォルダを作成し、
 # 建築物名に対応する画像ファイル（例: 水堀.png）を格納してください。
