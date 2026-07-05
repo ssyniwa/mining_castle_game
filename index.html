@@ -77,17 +77,28 @@
                 water_moat: { name: "水堀", cost: { water: 100 }, img: "https://placehold.co/64x64/00f/fff?text=🌊" },
                 grass_wall: { name: "草の壁", cost: { grass: 50 }, img: "https://placehold.co/64x64/0a0/fff?text=🌿" },
                 wood_wall: { name: "木の壁", cost: { wood: 50 }, img: "https://placehold.co/64x64/8b4513/fff?text=🧱" },
+                wood_tower: { name: "監視やぐら", cost: { wood: 100,grass:100 }, img: "https://placehold.co/64x64/444/fff?text=🗼" },
                 torch: { name: "松明", cost: { wood: 10, stone: 5 }, img: "https://placehold.co/64x64/f97316/fff?text=🔥" },
                 stone_wall: { name: "石の壁", cost: { stone: 100 }, img: "https://placehold.co/64x64/555/fff?text=⛰️" },
-                stone_tower: { name: "監視塔", cost: { stone: 200 }, img: "https://placehold.co/64x64/444/fff?text=🗼" },
-                copper_tower: { name: "銅棟", cost: { copper: 150 }, img: "https://placehold.co/64x64/d97706/fff?text=🔶" },
-                iron_artillery: { name: "砲兵", cost: { iron: 500 }, img: "https://placehold.co/64x64/dc2626/fff?text=💣" },
-                titanium_tower: { name: "未来塔", cost: { titanium: 500 }, img: "https://placehold.co/64x64/7e22ce/fff?text=🚀" }
+                stone_tower: { name: "石の監視塔", cost: { stone: 200 }, img: "https://placehold.co/64x64/444/fff?text=🗼" },
+                copper_wall: { name: "銅の壁", cost: { copper: 100 }, img: "https://placehold.co/64x64/d97706/fff?text=🔶" },
+                copper_tower: { name: "銅の監視棟", cost: { copper: 150 }, img: "https://placehold.co/64x64/d97706/fff?text=🔶" },
+                iron_wall: { name: "鉄の壁", cost: { iron: 100 }, img: "https://placehold.co/64x64/d97706/fff?text=🔶" },
+                iron_tower: { name: "鉄の監視棟", cost: { iron: 150 }, img: "https://placehold.co/64x64/d97706/fff?text=🔶" },
+                silver_tower: { name: "銀の装飾棟", cost: { iron50,silver: 150 }, img: "https://placehold.co/64x64/d97706/fff?text=🔶" },
+                gold_tower: { name: "金の装飾棟", cost: { iron:50,gold: 150 }, img: "https://placehold.co/64x64/d97706/fff?text=🔶" },
+                stone_artillery: { name: "石弓兵", cost: { wood: 100, stone: 50 }, img: "https://placehold.co/64x64/dc2626/fff?text=💣" },
+                copper_artillery: { name: "銅弓兵", cost: { copper: 100 }, img: "https://placehold.co/64x64/dc2626/fff?text=💣" },
+                iron_artillery: { name: "鉄弓兵", cost: { iron: 100 }, img: "https://placehold.co/64x64/dc2626/fff?text=💣" },
+                iron2_artillery: { name: "剣兵", cost: { iron: 200 }, img: "https://placehold.co/64x64/dc2626/fff?text=💣" },
+                iron3_artillery: { name: "銃兵", cost: { iron: 300,titanium:100 }, img: "https://placehold.co/64x64/dc2626/fff?text=💣" },
+                iron4_artillery: { name: "砲兵", cost: { iron: 500 }, img: "https://placehold.co/64x64/dc2626/fff?text=💣" },
+                titanium_tower: { name: "未来防衛塔", cost: { iron:50,gold,50,titanium: 500 }, img: "https://placehold.co/64x64/7e22ce/fff?text=🚀" }
             },
             goals: [
                 { desc: "水堀を配置", check: () => state.map.includes('water_moat'), bg: "bg-blue-900" },
-                { desc: "防衛線を構築", check: () => state.map.filter(x => x === 'stone_wall').length > 2, bg: "bg-green-900" },
-                { desc: "火力を配置", check: () => state.map.includes('iron_artillery'), bg: "bg-red-900" },
+                { desc: "防衛線を構築", check: () => state.map.filter(x => x === 'wood_wall').length > 2, bg: "bg-green-900" },
+                { desc: "火力を配置", check: () => state.map.includes('stone_artillery'), bg: "bg-red-900" },
                 { desc: "未来技術の配置", check: () => state.map.includes('titanium_tower'), bg: "bg-purple-900" }
             ]
         };
