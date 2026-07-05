@@ -153,16 +153,21 @@ with tab1:
 with tab2:
     st.subheader("建築物をクラフト")
     
-    for b_name, recipe in RECIPES.items():
-        # 材料の表示用文字列を作成 (例: "水堀 (水: 5)")
+    # レシピを列ごとに分割して表示
+    cols = st.columns(3) # 3列で表示
+    for i, (b_name, recipe) in enumerate(RECIPES.items()):
+        # 材料の表示用文字列を作成
         recipe_str = ", ".join([f"{mat}: {amount}" for mat, amount in recipe.items()])
         
-        # ボタンにレシピ情報を付与
-        if st.button(f"{b_name} ({recipe_str})を作る"):
+        # 3列のどこに配置するかを i % 3 で決定
+        if cols[i % 3].button(f"{b_name}\n({recipe_str})"):
             update_resources()
             build_structure(b_name)
             st.rerun()
+
+    st.divider() # 区切り線
     st.subheader("掘削機をクラフト")
+    # 掘削機の選択と作成ボタンも同様にコンパクトに配置可能
     target_mat = st.selectbox("掘削する材料を選択:", list(st.session_state.inventory.keys()))
     if st.button(f"{target_mat}用掘削機を作る (コスト: 鉄鉱石50)"):
         update_resources()
