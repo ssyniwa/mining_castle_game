@@ -8,16 +8,16 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
         .tab-btn.active { border-bottom: 2px solid #3b82f6; color: #3b82f6; }
-        .resource-card { transition: transform 0.1s; }
         .resource-card:active { transform: scale(0.95); }
-        .castle-bg { transition: background 0.5s ease; }
+        .grid-cell { aspect-ratio: 1 / 1; }
+        .selected { border: 2px solid #f59e0b; }
     </style>
 </head>
 <body class="bg-zinc-900 text-zinc-100 min-h-screen flex flex-col">
 
     <header class="p-4 border-b border-zinc-700 bg-zinc-800 sticky top-0 z-10">
         <h1 class="text-xl font-bold mb-2">🏰 Castle Architect</h1>
-        <div class="grid grid-cols-3 gap-2 text-xs" id="stats-bar">
+        <div class="grid grid-cols-5 gap-1 text-[10px]" id="stats-bar">
             <!-- Stats inserted by JS -->
         </div>
     </header>
@@ -32,23 +32,32 @@
     <main class="flex-1 p-4 overflow-y-auto">
         <div id="view-mine" class="space-y-4"></div>
         <div id="view-build" class="space-y-4 hidden"></div>
-        <div id="view-castle" class="hidden text-center">
-            <div id="castle-display" class="w-full h-64 border-4 border-zinc-700 rounded-2xl flex flex-col items-center justify-center p-4 castle-bg">
-                <h2 class="text-4xl">🏯</h2>
-                <p id="castle-status" class="mt-4 font-bold">建設レベル: 初級</p>
+        
+        <div id="view-castle" class="hidden text-center space-y-4">
+            <div id="castle-status" class="bg-zinc-800 p-2 rounded text-sm font-bold">建設ランク: 0 / 4</div>
+            
+            <!-- Grid Layout -->
+            <div id="castle-grid" class="grid grid-cols-5 gap-1 bg-zinc-800 p-2 rounded-lg border border-zinc-700">
+                <!-- Grid Cells inserted by JS -->
             </div>
-            <div id="castle-inventory" class="mt-4 grid grid-cols-2 gap-2"></div>
+
+            <!-- Inventory for Placement -->
+            <div class="text-left">
+                <h3 class="text-sm text-zinc-400 mb-2">所有資材 (クリックして選択):</h3>
+                <div id="castle-inventory" class="grid grid-cols-4 gap-2"></div>
+            </div>
         </div>
+
         <div id="view-goals" class="hidden space-y-4"></div>
     </main>
 
     <script>
         const state = {
             resources: { water: 0, grass: 0, wood: 0, stone: 0, copper: 0, iron: 0, silver: 0, gold: 0, titanium: 0 },
-            buildings: {},
-            excavators: 0,
-            goalTier: 0,
-            lastTick: Date.now()
+            inventory: {}, // Crafted but not placed
+            map: Array(25).fill(null), // 5x5 grid
+            selectedBuilding: null,
+            excavators: 0
         };
 
         const config = {
@@ -57,34 +66,29 @@
                 grass: { name: "草", icon: "🌱" },
                 wood: { name: "木材", icon: "🪵" },
                 stone: { name: "石材", icon: "🪨" },
-                copper: { name: "銅鉱石", icon: "🟧" },
-                iron: { name: "鉄鉱石", icon: "🟫" },
-                silver: { name: "銀鉱石", icon: "🥈" },
-                gold: { name: "金鉱石", icon: "🥇" },
+                copper: { name: "銅", icon: "🟧" },
+                iron: { name: "鉄", icon: "🟫" },
+                silver: { name: "銀", icon: "🥈" },
+                gold: { name: "金", icon: "🥇" },
                 titanium: { name: "チタン", icon: "💎" }
             },
             buildings: {
-                excavator: { name: "自動掘削機", cost: { wood: 50, stone: 50, iron: 20 }, icon: "⚙️" },
-                water_moat: { name: "水堀", cost: { water: 100 }, icon: "🌊" },
-                grass_wall: { name: "草の壁", cost: { grass: 50 }, icon: "🌿" },
-                wood_wall: { name: "木の壁", cost: { wood: 50 }, icon: "🧱" },
-                torch: { name: "松明", cost: { wood: 10, stone: 5 }, icon: "🔥" },
-                stone_wall: { name: "石の壁", cost: { stone: 100 }, icon: "⛰️" },
-                stone_tower: { name: "石の監視棟", cost: { stone: 200, wood: 50 }, icon: "🗼" },
-                copper_tower: { name: "銅の監視棟", cost: { copper: 150, stone: 100 }, icon: "🔶" },
-                copper_archer: { name: "銅の弓兵", cost: { copper: 200, wood: 100 }, icon: "🏹" },
-                iron_tower: { name: "鉄の監視棟", cost: { iron: 150, stone: 150 }, icon: "🟨" },
-                iron_spearman: { name: "鉄の槍兵", cost: { iron: 200 }, icon: "⚔️" },
-                iron_artillery: { name: "鉄の砲兵", cost: { iron: 500, stone: 200 }, icon: "💣" },
-                silver_ornament: { name: "銀の装飾", cost: { silver: 300 }, icon: "🥈" },
-                gold_ornament: { name: "金の装飾", cost: { gold: 300 }, icon: "🥇" },
-                titanium_tower: { name: "未来の防衛棟", cost: { titanium: 500, iron: 500 }, icon: "🚀" }
+                excavator: { name: "掘削機", cost: { wood: 50, stone: 50 }, img: "https://placehold.co/64x64/333/fff?text=⚙️" },
+                water_moat: { name: "水堀", cost: { water: 100 }, img: "https://placehold.co/64x64/00f/fff?text=🌊" },
+                grass_wall: { name: "草の壁", cost: { grass: 50 }, img: "https://placehold.co/64x64/0a0/fff?text=🌿" },
+                wood_wall: { name: "木の壁", cost: { wood: 50 }, img: "https://placehold.co/64x64/8b4513/fff?text=🧱" },
+                torch: { name: "松明", cost: { wood: 10, stone: 5 }, img: "https://placehold.co/64x64/f97316/fff?text=🔥" },
+                stone_wall: { name: "石の壁", cost: { stone: 100 }, img: "https://placehold.co/64x64/555/fff?text=⛰️" },
+                stone_tower: { name: "監視塔", cost: { stone: 200 }, img: "https://placehold.co/64x64/444/fff?text=🗼" },
+                copper_tower: { name: "銅棟", cost: { copper: 150 }, img: "https://placehold.co/64x64/d97706/fff?text=🔶" },
+                iron_artillery: { name: "砲兵", cost: { iron: 500 }, img: "https://placehold.co/64x64/dc2626/fff?text=💣" },
+                titanium_tower: { name: "未来塔", cost: { titanium: 500 }, img: "https://placehold.co/64x64/7e22ce/fff?text=🚀" }
             },
             goals: [
-                { desc: "水堀を作ろう", check: () => state.buildings.water_moat > 0, bg: "bg-blue-900" },
-                { desc: "木と石の防衛を揃えよう", check: () => state.buildings.wood_wall > 0 && state.buildings.stone_wall > 0, bg: "bg-green-900" },
-                { desc: "鉄の軍隊を結成しよう", check: () => state.buildings.iron_artillery > 0, bg: "bg-red-900" },
-                { desc: "未来の城へ進化", check: () => state.buildings.titanium_tower > 0, bg: "bg-purple-900" }
+                { desc: "水堀を配置", check: () => state.map.includes('water_moat'), bg: "bg-blue-900" },
+                { desc: "防衛線を構築", check: () => state.map.filter(x => x === 'stone_wall').length > 2, bg: "bg-green-900" },
+                { desc: "火力を配置", check: () => state.map.includes('iron_artillery'), bg: "bg-red-900" },
+                { desc: "未来技術の配置", check: () => state.map.includes('titanium_tower'), bg: "bg-purple-900" }
             ]
         };
 
@@ -96,11 +100,85 @@
         function craft(id) {
             const b = config.buildings[id];
             for (let res in b.cost) {
-                if (state.resources[res] < b.cost[res]) return alert("材料が足りません");
+                if (state.resources[res] < b.cost[res]) return; // Silent return
             }
             for (let res in b.cost) state.resources[res] -= b.cost[res];
-            state.buildings[id] = (state.buildings[id] || 0) + 1;
+            state.inventory[id] = (state.inventory[id] || 0) + 1;
             render();
+        }
+
+        function selectForPlacement(id) {
+            state.selectedBuilding = id;
+            render();
+        }
+
+        function placeOnMap(index) {
+            if (!state.selectedBuilding) return;
+            if (state.inventory[state.selectedBuilding] > 0) {
+                state.map[index] = state.selectedBuilding;
+                state.inventory[state.selectedBuilding]--;
+                state.selectedBuilding = null;
+                render();
+            }
+        }
+
+        function render() {
+            // Stats
+            document.getElementById('stats-bar').innerHTML = Object.keys(state.resources).map(k => `
+                <div class="bg-zinc-700 p-1 rounded text-center">
+                    <div>${config.resources[k].icon}</div>
+                    <div class="font-bold">${state.resources[k]}</div>
+                </div>
+            `).join('');
+
+            // Mine
+            document.getElementById('view-mine').innerHTML = `
+                <div class="grid grid-cols-3 gap-2">
+                    ${Object.keys(config.resources).map(k => `
+                        <button onclick="mine('${k}')" class="resource-card p-3 bg-zinc-800 rounded-lg border border-zinc-600">
+                            ${config.resources[k].icon} ${config.resources[k].name}
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+
+            // Build
+            document.getElementById('view-build').innerHTML = Object.keys(config.buildings).map(k => {
+                const b = config.buildings[k];
+                return `
+                    <div class="p-3 bg-zinc-800 rounded-lg flex justify-between items-center border border-zinc-700">
+                        <img src="${b.img}" class="w-10 h-10 rounded">
+                        <div class="text-sm font-bold">${b.name}</div>
+                        <button onclick="craft('${k}')" class="bg-blue-600 px-3 py-1 rounded text-xs">建築</button>
+                    </div>
+                `;
+            }).join('');
+
+            // Castle
+            const grid = document.getElementById('castle-grid');
+            grid.innerHTML = state.map.map((b, i) => `
+                <div onclick="placeOnMap(${i})" class="grid-cell bg-zinc-900 border border-zinc-700 rounded flex items-center justify-center cursor-pointer">
+                    ${b ? `<img src="${config.buildings[b].img}" class="w-full h-full p-1">` : ''}
+                </div>
+            `).join('');
+
+            const inv = document.getElementById('castle-inventory');
+            inv.innerHTML = Object.keys(state.inventory).filter(k => state.inventory[k] > 0).map(k => `
+                <button onclick="selectForPlacement('${k}')" class="p-1 bg-zinc-800 rounded border ${state.selectedBuilding === k ? 'border-amber-500' : 'border-zinc-700'}">
+                    <img src="${config.buildings[k].img}" class="w-full">
+                    <div class="text-[10px]">x${state.inventory[k]}</div>
+                </button>
+            `).join('');
+
+            // Goals
+            document.getElementById('view-goals').innerHTML = config.goals.map((g, i) => `
+                <div class="p-4 rounded-xl ${g.check() ? 'bg-emerald-900' : 'bg-zinc-800'} border border-zinc-700 text-sm">
+                    ${g.desc} ${g.check() ? '✅' : '⏳'}
+                </div>
+            `).join('');
+            
+            let tier = config.goals.filter(g => g.check()).length;
+            document.getElementById('castle-status').innerText = `建設ランク: ${tier} / ${config.goals.length}`;
         }
 
         function showTab(id) {
@@ -110,68 +188,10 @@
             document.getElementById('tab-' + id).classList.add('active');
         }
 
-        function render() {
-            // Stats
-            const bar = document.getElementById('stats-bar');
-            bar.innerHTML = Object.keys(state.resources).map(k => `
-                <div class="bg-zinc-700 p-1 rounded text-center">
-                    <div class="text-xl">${config.resources[k].icon}</div>
-                    <div class="font-bold">${state.resources[k]}</div>
-                </div>
-            `).join('');
-
-            // Mine View
-            document.getElementById('view-mine').innerHTML = `
-                <p class="text-sm text-zinc-400">採掘機: ${state.excavators}台稼働中</p>
-                <div class="grid grid-cols-2 gap-2">
-                    ${Object.keys(config.resources).map(k => `
-                        <button onclick="mine('${k}')" class="resource-card p-4 bg-zinc-800 rounded-xl border border-zinc-600">
-                            ${config.resources[k].icon} ${config.resources[k].name}
-                        </button>
-                    `).join('')}
-                </div>
-            `;
-
-            // Build View
-            document.getElementById('view-build').innerHTML = Object.keys(config.buildings).map(k => {
-                const b = config.buildings[k];
-                const costStr = Object.keys(b.cost).map(r => `${b.cost[r]}${config.resources[r].icon}`).join(' ');
-                return `
-                    <div class="p-3 bg-zinc-800 rounded-xl flex justify-between items-center border border-zinc-700">
-                        <div>
-                            <div class="font-bold">${b.icon} ${b.name}</div>
-                            <div class="text-xs text-zinc-400">コスト: ${costStr}</div>
-                        </div>
-                        <button onclick="craft('${k}')" class="bg-blue-600 px-4 py-2 rounded-lg text-sm font-bold">建築</button>
-                    </div>
-                `;
-            }).join('');
-
-            // Castle View
-            const inv = document.getElementById('castle-inventory');
-            inv.innerHTML = Object.keys(state.buildings).filter(k => state.buildings[k] > 0).map(k => `
-                <div class="p-2 bg-zinc-800 text-center rounded text-sm">${config.buildings[k].icon} x${state.buildings[k]}</div>
-            `).join('');
-
-            // Goals
-            document.getElementById('view-goals').innerHTML = config.goals.map((g, i) => `
-                <div class="p-4 rounded-xl ${g.check() ? 'bg-emerald-900' : 'bg-zinc-800'} border border-zinc-700">
-                    ${g.desc} ${g.check() ? '✅' : '⏳'}
-                </div>
-            `).join('');
-            
-            // Background Update
-            let tier = 0;
-            config.goals.forEach(g => { if(g.check()) tier++; });
-            const bg = document.getElementById('castle-display');
-            bg.className = "w-full h-64 border-4 border-zinc-700 rounded-2xl flex flex-col items-center justify-center p-4 castle-bg " + (tier > 0 ? (tier > 2 ? 'bg-purple-800' : 'bg-zinc-700') : 'bg-zinc-800');
-            document.getElementById('castle-status').innerText = `建設ランク: ${tier} / ${config.goals.length}`;
-        }
-
         setInterval(() => {
-            state.excavators = state.buildings.excavator || 0;
+            state.excavators = state.inventory.excavator || 0;
             if (state.excavators > 0) {
-                Object.keys(state.resources).forEach(r => state.resources[r] += Math.floor(state.excavators / 2));
+                Object.keys(state.resources).forEach(r => state.resources[r] += state.excavators);
                 render();
             }
         }, 3000);
