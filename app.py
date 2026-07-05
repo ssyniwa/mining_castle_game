@@ -66,7 +66,12 @@ def build_structure(name):
         st.session_state.inventory[mat] -= amount
     st.session_state.buildings.append(name)
     st.success(f"{name}を建設しました！")
-
+def check_goals():
+    goals = {
+        "石の壁を3つ配置": len([b for b in st.session_state.map_data.values() if b == "石の壁"]) >= 3,
+        "未来の防衛棟を1つ配置": "未来の防衛棟" in st.session_state.map_data.values()
+    }
+    return goals
 # --- UI ---
 st.title("🏰 城建設クラフト")
 tab1, tab2, tab3 = st.tabs(["⛏️ 採掘", "🔨 建築", "🏰 配置"])
@@ -88,6 +93,18 @@ with tab2:
 
 with tab3:
     st.subheader("城を設計する")
+    # 全配置リセットボタン
+    if st.button("🏰 マップをリセット"):
+        st.session_state.map_data = {}
+        st.rerun()
+
+    # 目標リストの表示
+    st.write("--- 目標リスト ---")
+    goals = check_goals()
+    for goal, is_done in goals.items():
+        # 達成していると緑色、未達成は灰色で表示
+        color = "green" if is_done else "gray"
+        st.markdown(f":{color}[{'✅' if is_done else '⬜'} {goal}]")
     if not st.session_state.buildings and not st.session_state.map_data:
         st.info("建築物を作るとここに表示されます")
     else:
