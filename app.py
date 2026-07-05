@@ -119,6 +119,19 @@ def check_goals():
     
     # 第4段階：未来の城へ
     "未来の防衛棟を2つ配置": list(st.session_state.map_data.values()).count("未来の防衛棟") >= 2
+
+    "鉄壁の要塞 (強度500以上)": calculate_score()["強度"] >= 500,
+    "軍事拠点 (攻撃力300以上)": calculate_score()["攻撃"] >= 300,
+    
+    # --- 芸術特化型：美しさを重視 ---
+    "黄金の宮殿 (美しさ400以上)": calculate_score()["美"] >= 400,
+    
+    # --- バランス型：すべてを平均的に高める ---
+    "調和の取れた城 (強度・攻撃・美 各200以上)": 
+        all(score >= 200 for score in calculate_score().values()),
+    
+    # --- コンプリート目標 ---
+    "究極の城 (総合スコア1500以上)": sum(calculate_score().values()) >= 1500
 }
     return goals
 
