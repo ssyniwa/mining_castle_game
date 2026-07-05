@@ -257,9 +257,4 @@ with st.sidebar:
     else:
         st.write("なし")
 
-    # マップ配置データの表示
-    st.subheader("🏰 配置済みの施設")
-    if st.session_state.map_data:
-        st.write(st.session_state.map_data)
-    else:
-        st.write("まだ施設を配置していません")
+    
